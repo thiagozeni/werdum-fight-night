@@ -14,53 +14,54 @@ export class YouWinScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(600, 0, 0, 0)
 
-    // Fundo
-    this.add.image(width / 2, height / 2, 'arena').setDisplaySize(width, height).setTint(0x112244).setDepth(0)
-    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.4).setDepth(1)
+    // Fundo sem crowd
+    this.add.image(width / 2, height / 2, 'sem-crowd').setDisplaySize(width, height).setDepth(0)
+    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.45).setDepth(1)
 
-    // Título
-    this.add.text(width / 2, height * 0.12, 'CONGRATULATIONS\nYOU WIN!', {
-      fontSize: '60px', color: '#ffcc00', fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 8, align: 'center', lineSpacing: 16,
+    // Títulos
+    this.add.text(960, 157, 'CONGRATULATIONS', {
+      fontSize: '90px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 10,
     }).setOrigin(0.5).setDepth(2)
 
-    // Arte da celebração (direita)
-    this.add.image(width * 0.65, height * 0.60, 'good-guys-win')
-      .setOrigin(0.5).setDepth(2)
+    this.add.text(960, 253, 'YOU WIN!', {
+      fontSize: '100px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 12,
+    }).setOrigin(0.5).setDepth(2)
 
-    // PLAY AGAIN? (esquerda)
-    const menuX = width * 0.26
-    const menuY = height * 0.65
+    // Arte celebração
+    this.add.image(808, 299, 'good-guys-win').setOrigin(0, 0).setDepth(2)
 
-    this.add.text(menuX, menuY, 'PLAY AGAIN?', {
-      fontSize: '40px', color: '#ffffff', fontFamily: '"Press Start 2P", monospace',
+    // PLAY AGAIN?
+    this.add.text(129, 658, 'PLAY AGAIN?', {
+      fontSize: '80px', color: '#e4e4e4',
+      fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2)
+    }).setOrigin(0, 0).setDepth(2)
 
     // Cursor ">"
-    this.add.text(menuX - 130, menuY + 80, '>', {
-      fontSize: '32px', color: '#ffcc00', fontFamily: '"Press Start 2P", monospace',
+    this.add.text(215, 742, '>', {
+      fontSize: '44px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 5,
     }).setOrigin(0.5).setDepth(2)
 
     // PRESS START (pisca)
-    const startText = this.add.text(menuX, menuY + 80, 'PRESS START', {
-      fontSize: '32px', color: '#ffcc00', fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 5,
+    const startText = this.add.text(502, 742, 'PRESS START', {
+      fontSize: '55px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 6,
     }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
 
     this.tweens.add({
-      targets: startText,
-      alpha: 0.2,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
+      targets: startText, alpha: 0.2, duration: 600,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     })
 
     startText.on('pointerdown', () => this.goToSelect())
 
-    // Inputs (delay pra evitar skip acidental)
     this.time.delayedCall(1000, () => {
       this.input.keyboard!.on('keydown-SPACE', () => this.goToSelect())
       this.input.keyboard!.on('keydown-ENTER', () => this.goToSelect())
