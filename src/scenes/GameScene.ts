@@ -56,6 +56,9 @@ export class GameScene extends Phaser.Scene {
   private comboTimer = 0
   private readonly COMBO_WINDOW = 2500
 
+  // Timer
+  private gameTimerMs = 0
+
   // Waves
   private currentWave = 0
   private spawnQueue: EnemyType[] = []
@@ -71,13 +74,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.isGameOver = false
-    this.isPaused   = false
-    this.enemies    = []
-    this.allies     = []
-    this.score      = 0
-    this.comboCount = 0
-    this.comboTimer = 0
+    this.isGameOver  = false
+    this.isPaused    = false
+    this.enemies     = []
+    this.allies      = []
+    this.score       = 0
+    this.comboCount  = 0
+    this.comboTimer  = 0
+    this.gameTimerMs = 0
 
     const selectedChar: string = this.registry.get('selectedChar') ?? 'werdum'
 
@@ -150,6 +154,9 @@ export class GameScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     if (this.isGameOver || this.isPaused) return
+
+    this.gameTimerMs += delta
+    this.hud.updateTime(Math.floor(this.gameTimerMs / 1000))
 
     const joy = this.joystick.getState()
 

@@ -12,7 +12,8 @@ export class BootScene extends Phaser.Scene {
     this.load.on('progress', (v: number) => bar.setDisplaySize(v * 400, 20))
 
     // Cenários
-    this.load.image('arena',        'imgs/cenario/real.png')
+    this.load.image('arena',          'imgs/cenario/real.png')
+    this.load.image('sem-crowd',      'imgs/cenario/sem-crowd.png')
     this.load.image('bg-cachorradas', 'imgs/cenario/cachorradas.png')
 
     // Assets da tela de título

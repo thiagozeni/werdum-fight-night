@@ -8,12 +8,21 @@ const CHARACTERS = [
   { key: 'thor',   name: 'THOR',   sv: 'thor-sv'   },
 ]
 
+// Posições dos boxes (Figma)
+const BOX_Y = 608
+const BOXES = [
+  { key: 'werdum', x: 648,  w: 280, h: 315 },
+  { key: 'dida',   x: 948,  w: 281, h: 315 },
+  { key: 'thor',   x: 1248, w: 280, h: 315 },
+]
+
 export class SelectScene extends Phaser.Scene {
   private selectedIndex = 0
   private previewSprite!: Phaser.GameObjects.Image
   private previewName!: Phaser.GameObjects.Text
-  private cursorArrow!: Phaser.GameObjects.Text
-  private selectionBoxes: Phaser.GameObjects.Rectangle[] = []
+  private selectorArrow!: Phaser.GameObjects.Text
+  private selector1P!: Phaser.GameObjects.Text
+  private boxBorders: Phaser.GameObjects.Rectangle[] = []
   private isConfirming = false
 
   constructor() {
@@ -23,96 +32,100 @@ export class SelectScene extends Phaser.Scene {
   create() {
     this.isConfirming = false
     this.selectedIndex = 0
-    this.selectionBoxes = []
+    this.boxBorders = []
 
     const { width, height } = this.scale
 
-    // Fundo
-    this.add.image(width / 2, height / 2, 'arena').setDisplaySize(width, height).setTint(0x223344)
-    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6)
+    // Fundo sem crowd
+    this.add.image(width / 2, height / 2, 'sem-crowd').setDisplaySize(width, height).setDepth(0)
+    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(1)
 
-    // Título
-    this.add.text(width / 2, height * 0.09, 'SELECT PLAYER', {
-      fontSize: '48px', color: '#ffcc00', fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5)
+    // "SELECT PLAYER"
+    this.add.text(648, 123, 'SELECT PLAYER', {
+      fontSize: '64px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+    }).setOrigin(0, 0).setDepth(2)
 
     // High score
     const hs = getHighScore(this.registry)
     if (hs > 0) {
-      this.add.text(width / 2, height * 0.17, `BEST: ${hs.toLocaleString()}`, {
-        fontSize: '14px', color: '#aaddff', fontFamily: '"Press Start 2P", monospace',
+      this.add.text(960, 68, `BEST: ${hs.toLocaleString()}`, {
+        fontSize: '18px', color: '#aaddff', fontFamily: '"Press Start 2P", monospace',
         stroke: '#000', strokeThickness: 2,
-      }).setOrigin(0.5)
+      }).setOrigin(0.5).setDepth(2)
     }
 
-    // Preview grande (esquerda)
-    this.previewSprite = this.add.image(width * 0.195, height, 'werdum-sv')
-      .setOrigin(0.5, 1)
-      .setScale(1.5)
+    // Preview sideview (esquerda — sobrepõe borda esquerda)
+    this.previewSprite = this.add.image(-159, 159, 'werdum-sv').setOrigin(0, 0).setDepth(2)
 
-    // Nome do personagem selecionado
-    this.previewName = this.add.text(width * 0.195, height * 0.78, 'WERDUM', {
-      fontSize: '44px', color: '#ffffff', fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 8,
-    }).setOrigin(0.5)
+    // Nome do personagem
+    this.previewName = this.add.text(123, 710, 'WERDUM', {
+      fontSize: '80px', color: '#f8f7f7',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 6,
+    }).setOrigin(0, 0).setDepth(2)
 
-    // Grid de retratos
-    const boxSize = 260
-    const spacing = 310
-    const gridStartX = Math.round(width * 0.46)
-    const gridY = Math.round(height * 0.58)
-
-    CHARACTERS.forEach((char, i) => {
-      const cx = gridStartX + i * spacing
+    // Boxes dos 3 personagens
+    BOXES.forEach((box, i) => {
+      const cx = box.x + box.w / 2
+      const cy = BOX_Y + box.h / 2
 
       // Fundo do box
-      this.add.rectangle(cx, gridY, boxSize, boxSize, 0x111122)
+      this.add.rectangle(box.x, BOX_Y, box.w, box.h, 0x181c21)
+        .setOrigin(0, 0).setDepth(2)
 
       // Borda (será atualizada pelo selectChar)
-      const box = this.add.rectangle(cx, gridY, boxSize, boxSize, 0x000000, 0)
-        .setStrokeStyle(4, 0x555566)
-        .setDepth(2)
-      this.selectionBoxes.push(box)
+      const border = this.add.rectangle(cx, cy, box.w, box.h, 0x000000, 0)
+        .setStrokeStyle(8, 0xa79ca0).setDepth(3)
+      this.boxBorders.push(border)
 
-      // Sprite do personagem com máscara
-      const sprite = this.add.sprite(cx, gridY + 20, char.key).setScale(0.85).setDepth(1)
-      const maskShape = this.make.graphics()
-      maskShape.fillStyle(0xffffff)
-      maskShape.fillRect(cx - boxSize / 2, gridY - boxSize / 2, boxSize, boxSize)
-      sprite.setMask(maskShape.createGeometryMask())
+      // Sprite do personagem
+      const sprite = this.add.sprite(cx, cy + 20, CHARACTERS[i].key)
+        .setScale(0.85).setDepth(3)
+
+      // Máscara retangular
+      const mask = this.make.graphics()
+      mask.fillRect(box.x, BOX_Y, box.w, box.h)
+      sprite.setMask(mask.createGeometryMask())
 
       // Interativo
-      const hitArea = this.add.rectangle(cx, gridY, boxSize, boxSize, 0x000000, 0)
-        .setDepth(3)
-        .setInteractive({ useHandCursor: true })
+      const hitArea = this.add.rectangle(cx, cy, box.w, box.h, 0x000000, 0)
+        .setDepth(4).setInteractive({ useHandCursor: true })
       hitArea.on('pointerdown', () => {
         if (this.selectedIndex === i) this.confirmSelection()
         else this.selectChar(i)
       })
-      hitArea.on('pointerover', () => { if (this.selectedIndex !== i) sound.hover() })
     })
 
-    // Wand — card KNOCKED OUT (4º box, não selecionável)
-    const wandCx = gridStartX + 3 * spacing
-    this.add.rectangle(wandCx, gridY, boxSize, boxSize, 0x111122)
-    this.add.rectangle(wandCx, gridY, boxSize, boxSize, 0x000000, 0).setStrokeStyle(4, 0x333344).setDepth(2)
-    const wandSprite = this.add.sprite(wandCx, gridY + 20, 'wand').setScale(0.85).setDepth(1)
-    const wandMask = this.make.graphics()
-    wandMask.fillStyle(0xffffff)
-    wandMask.fillRect(wandCx - boxSize / 2, gridY - boxSize / 2, boxSize, boxSize)
-    wandSprite.setMask(wandMask.createGeometryMask())
+    // Box do Wand (KNOCKED OUT, não selecionável)
+    const wandX = 1548, wandW = 280, wandH = 315
+    const wandCx = wandX + wandW / 2
+    const wandCy = BOX_Y + wandH / 2
+    this.add.rectangle(wandX, BOX_Y, wandW, wandH, 0x181c21).setOrigin(0, 0).setDepth(2)
+    this.add.rectangle(wandCx, wandCy, wandW, wandH, 0x000000, 0)
+      .setStrokeStyle(5, 0xa79ca0).setDepth(3)
+    const wandSprite = this.add.sprite(wandCx, wandCy + 20, 'wand').setScale(0.85).setDepth(3)
     wandSprite.setTint(0x555566)
-    this.add.text(wandCx, gridY, 'KNOCKED\nOUT', {
-      fontSize: '22px', color: '#999999', fontFamily: '"Press Start 2P", monospace',
-      align: 'center', stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0.5).setAngle(-30).setDepth(4)
+    const wandMask = this.make.graphics()
+    wandMask.fillRect(wandX, BOX_Y, wandW, wandH)
+    wandSprite.setMask(wandMask.createGeometryMask())
+    this.add.text(wandCx, wandCy - 20, 'KNOCKED\nOUT', {
+      fontSize: '24px', color: '#cdcdcd', fontFamily: '"Press Start 2P", monospace',
+      align: 'center', stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setAlpha(0.7).setAngle(-45).setDepth(4)
 
-    // Cursor "1P ▼"
-    this.cursorArrow = this.add.text(gridStartX, gridY - boxSize / 2 - 30, '1P\n▼', {
-      fontSize: '28px', color: '#ffcc00', fontFamily: '"Press Start 2P", monospace',
-      align: 'center', stroke: '#000000', strokeThickness: 5,
-    }).setOrigin(0.5, 1).setDepth(4)
+    // Cursor "1P" e seta
+    this.selector1P = this.add.text(756, 502, '1P', {
+      fontSize: '54px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 5,
+    }).setOrigin(0.5, 0).setDepth(4)
+
+    this.selectorArrow = this.add.text(813, 577, '▼', {
+      fontSize: '36px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 4,
+    }).setOrigin(0.5, 0).setDepth(4)
 
     // Controles
     this.input.keyboard!.on('keydown-LEFT',  () => this.selectChar((this.selectedIndex - 1 + CHARACTERS.length) % CHARACTERS.length))
@@ -129,19 +142,26 @@ export class SelectScene extends Phaser.Scene {
     if (this.isConfirming) return
     sound.hover()
     this.selectedIndex = index
-
     const char = CHARACTERS[index]
+
+    // Atualiza preview sideview e nome
     this.previewSprite.setTexture(char.sv)
     this.previewName.setText(char.name)
 
-    this.selectionBoxes.forEach((box, i) => {
-      box.setStrokeStyle(i === index ? 5 : 4, i === index ? 0xffdd00 : 0x555566)
-      box.setDepth(i === index ? 3 : 2)
+    // Atualiza bordas
+    this.boxBorders.forEach((border, i) => {
+      if (i === index) {
+        border.setStrokeStyle(12, 0xf3c204)
+      } else {
+        border.setStrokeStyle(8, 0xa79ca0)
+      }
     })
 
-    const gridStartX = Math.round(this.scale.width * 0.46)
-    const spacing = 310
-    this.cursorArrow.setX(gridStartX + index * spacing)
+    // Move cursor 1P/seta
+    const boxCx = BOXES[index].x + BOXES[index].w / 2
+    const cursorOffsetX = boxCx - (BOXES[0].x + BOXES[0].w / 2)
+    this.selector1P.setX(756 + cursorOffsetX)
+    this.selectorArrow.setX(813 + cursorOffsetX)
   }
 
   private confirmSelection() {

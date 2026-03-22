@@ -1,220 +1,258 @@
 import Phaser from 'phaser'
 
-// Escala aplicada às imagens hud-left/hud-right (originais: 230×93 e 212×93)
-const SCALE = 1.7
+const D = 100
+const PLAYER_BAR_X = 250
+const PLAYER_BAR_Y = 100
+const PLAYER_BAR_MAX_W = 551
+const PLAYER_BAR_H = 61
 
-// Posições das barras de HP dentro da imagem hud-left (coords originais)
-// Barra vermelha: y=27-41, x=23-224
-const HL_BAR_X  = 23
-const HL_BAR_Y  = (27 + 41) / 2   // centro vertical = 34
-const HL_BAR_W  = 224 - 23         // largura máxima = 201
-const HL_BAR_H  = 41 - 27          // altura = 14
-
-// Posições da barra de HP dentro da imagem hud-right (coords originais)
-// Barra vermelha: y=27-41, x=0-203
-const HR_BAR_Y  = (27 + 41) / 2   // centro vertical = 34
-const HR_BAR_W  = 203              // largura máxima (de x=0 até retrato)
-const HR_BAR_H  = 41 - 27          // altura = 14
+const WAND_BAR_X = 1119
+const WAND_BAR_Y = 100
+const WAND_BAR_MAX_W = 551
+const WAND_BAR_H = 61
+// Âncora da barra do wand na direita
+const WAND_BAR_ANCHOR_X = 1670 // WAND_BAR_X + WAND_BAR_MAX_W
 
 export class HUD {
   private scene: Phaser.Scene
 
+  // Player
+  private playerPortraitBg!: Phaser.GameObjects.Rectangle
+  playerPortraitSprite!: Phaser.GameObjects.Sprite
+  private playerNameText!: Phaser.GameObjects.Text
+  private playerBarBg!: Phaser.GameObjects.Rectangle
   private playerBar!: Phaser.GameObjects.Rectangle
-  private playerHPText!: Phaser.GameObjects.Text
-  private playerLabel!: Phaser.GameObjects.Text
+  private playerHPPct!: Phaser.GameObjects.Text
 
+  // Wand
+  private wandPortraitBg!: Phaser.GameObjects.Rectangle
+  wandPortraitImg!: Phaser.GameObjects.Image
+  private wandBarBg!: Phaser.GameObjects.Rectangle
   private wandBar!: Phaser.GameObjects.Rectangle
-  private wandPortrait!: Phaser.GameObjects.Image
+  private wandHPPct!: Phaser.GameObjects.Text
   private wandKO = false
 
+  // Centro
   private waveText!: Phaser.GameObjects.Text
-  private enemyCountText!: Phaser.GameObjects.Text
+  private timerText!: Phaser.GameObjects.Text
   private scoreText!: Phaser.GameObjects.Text
+  private enemyCountText!: Phaser.GameObjects.Text
+
+  // Extras
   private comboText!: Phaser.GameObjects.Text
   private damageFlash!: Phaser.GameObjects.Rectangle
 
-  private readonly D = 100
-
-  // Largura máxima das barras em pixels de tela
-  private readonly playerBarMaxW: number
-  private readonly wandBarMaxW: number
-
   constructor(scene: Phaser.Scene) {
     this.scene = scene
-    this.playerBarMaxW = Math.round(HL_BAR_W * SCALE)
-    this.wandBarMaxW   = Math.round(HR_BAR_W * SCALE)
     this.build()
   }
 
   private build() {
     const { width, height } = this.scene.scale
 
-    const hlW = Math.round(230 * SCALE)  // ~391
-    const hlH = Math.round(93  * SCALE)  // ~158
-    const hrW = Math.round(212 * SCALE)  // ~360
-    // const hrH = Math.round(93  * SCALE)  // ~158
+    // ── Overlay escuro no topo ────────────────────────────────────────────
+    this.scene.add.rectangle(960, 0, 1920, 200, 0x000000)
+      .setAlpha(0.55)
+      .setDepth(D - 1)
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
 
-    // ── Faixa escura no topo ───────────────────────────────
-    this.scene.add.rectangle(width / 2, hlH / 2, width, hlH, 0x000000, 0.55)
-      .setDepth(this.D - 1).setScrollFactor(0)
+    // ════════════════════════════════════════════════════════════════════
+    // LADO ESQUERDO — Player
+    // ════════════════════════════════════════════════════════════════════
 
-    // ── Painel esquerdo (jogador) ──────────────────────────
-    this.scene.add.image(0, 0, 'hud-left')
+    // Portrait background
+    this.playerPortraitBg = this.scene.add.rectangle(43, 42, 185, 185, 0x1e276e)
       .setOrigin(0, 0)
-      .setDisplaySize(hlW, hlH)
-      .setDepth(this.D)
+      .setDepth(D + 1)
       .setScrollFactor(0)
+    this.playerPortraitBg.setStrokeStyle(12, 0xf3c204)
 
-    // Máscara sobre texto "100%" estático (x≈180-224, y≈15-26 em orig)
-    this.scene.add.rectangle(
-      Math.round(178 * SCALE), Math.round(15 * SCALE),
-      Math.round(48 * SCALE), Math.round(13 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
+    // Portrait sprite mascarado
+    const playerMaskShape = this.scene.make.graphics()
+    playerMaskShape.fillStyle(0xffffff)
+    playerMaskShape.fillRect(43, 42, 185, 185)
+    const playerMask = playerMaskShape.createGeometryMask()
 
-    // Máscara sobre texto "95%" do segundo bar estático esq. (x≈185-224, y≈52-66 em orig)
-    this.scene.add.rectangle(
-      Math.round(183 * SCALE), Math.round(52 * SCALE),
-      Math.round(42 * SCALE), Math.round(16 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
-
-    // Máscara sobre texto "RYU" da imagem (x≈5-38, y≈80-92 em orig)
-    this.scene.add.rectangle(
-      Math.round(5 * SCALE), Math.round(80 * SCALE),
-      Math.round(36 * SCALE), Math.round(14 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
-
-    // Barra de HP do player (cresce da esquerda para a direita)
-    const pBarX = Math.round(HL_BAR_X * SCALE)
-    const pBarY = Math.round(HL_BAR_Y * SCALE)
-    const pBarH = Math.round(HL_BAR_H * SCALE)
-
-    this.playerBar = this.scene.add.rectangle(pBarX, pBarY, this.playerBarMaxW, pBarH, 0x22cc44)
-      .setOrigin(0, 0.5)
-      .setDepth(this.D + 1)
-      .setScrollFactor(0)
-
-    // Nome do personagem — posicionado sobre o texto "RYU" da imagem (~x=5, y=82 em coords orig)
-    // Cobre o texto original com o nome real do personagem
-    const nameY = Math.round(84 * SCALE)
-    this.playerLabel = this.scene.add.text(Math.round(5 * SCALE), nameY, 'WERDUM', {
-      fontSize: `${Math.round(10 * SCALE)}px`, color: '#ffdd44',
-      fontFamily: 'monospace', stroke: '#000000', strokeThickness: 4,
-    }).setDepth(this.D + 3).setScrollFactor(0)
-
-    // HP numérico — dentro da barra, alinhado à direita
-    this.playerHPText = this.scene.add.text(pBarX + this.playerBarMaxW - 4, pBarY, '', {
-      fontSize: `${Math.round(9 * SCALE)}px`, color: '#ffffff',
-      fontFamily: 'monospace', stroke: '#000', strokeThickness: 3,
-    }).setOrigin(1, 0.5).setDepth(this.D + 3).setScrollFactor(0)
-
-    // ── Painel direito (Wanderlei) ─────────────────────────
-    const hrLeft = width - hrW
-
-    this.scene.add.image(width, 0, 'hud-right')
-      .setOrigin(1, 0)
-      .setDisplaySize(hrW, hlH)
-      .setDepth(this.D)
-      .setScrollFactor(0)
-
-    // Máscara sobre texto "100%" estático direito (x≈0-50, y≈15-26 em orig)
-    this.scene.add.rectangle(
-      hrLeft, Math.round(15 * SCALE),
-      Math.round(52 * SCALE), Math.round(13 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
-
-    // Máscara sobre texto "KEN" da imagem (x≈163-208, y≈80-92 em orig, a partir da borda esq. da imagem)
-    this.scene.add.rectangle(
-      hrLeft + Math.round(162 * SCALE), Math.round(80 * SCALE),
-      Math.round(48 * SCALE), Math.round(14 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
-
-    // Máscara sobre texto "90%" do segundo bar estático (x≈15-60, y≈52-66 em orig)
-    this.scene.add.rectangle(
-      hrLeft + Math.round(14 * SCALE), Math.round(52 * SCALE),
-      Math.round(50 * SCALE), Math.round(16 * SCALE),
-      0x000000, 0.85,
-    ).setOrigin(0, 0).setDepth(this.D + 2).setScrollFactor(0)
-
-    // Barra de HP do Wand (âncora na DIREITA, cresce para a esquerda)
-    // No hud-right a barra vai de x=0 até x=203 (retrato está à direita)
-    // Na tela: borda esquerda da imagem = width - hrW; barra até x=203*SCALE daquela borda
-    const wBarAnchorX = width - hrW + Math.round(HR_BAR_W * SCALE)
-    const wBarY       = Math.round(HR_BAR_Y * SCALE)
-    const wBarH       = Math.round(HR_BAR_H * SCALE)
-
-    this.wandBar = this.scene.add.rectangle(wBarAnchorX, wBarY, this.wandBarMaxW, wBarH, 0xdd3311)
-      .setOrigin(1, 0.5)
-      .setDepth(this.D + 1)
-      .setScrollFactor(0)
-
-    // Retrato do Wanderlei no espaço do retrato (à direita do painel)
-    const portraitCX = width - Math.round(24 * SCALE)  // centro do retrato
-    const portraitCY = Math.round(46 * SCALE)
-    const portraitW  = Math.round(44 * SCALE)
-    const portraitH  = Math.round(56 * SCALE)
-    this.wandPortrait = this.scene.add.image(portraitCX, portraitCY, 'wand')
-      .setDisplaySize(portraitW, portraitH)
+    this.playerPortraitSprite = this.scene.add.sprite(135, 134, 'werdum-sv')
+      .setDisplaySize(185, 185)
       .setOrigin(0.5, 0.5)
-      .setDepth(this.D + 2)
+      .setDepth(D + 1)
+      .setScrollFactor(0)
+      .setMask(playerMask)
+
+    // Nome do player
+    this.playerNameText = this.scene.add.text(250, 47, 'WERDUM', {
+      fontSize: '54px',
+      color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 6,
+    }).setOrigin(0, 0).setDepth(D + 2).setScrollFactor(0)
+
+    // HP bar bg
+    this.playerBarBg = this.scene.add.rectangle(PLAYER_BAR_X, PLAYER_BAR_Y, PLAYER_BAR_MAX_W, PLAYER_BAR_H, 0xd5d5d5)
+      .setOrigin(0, 0)
+      .setDepth(D + 1)
+      .setScrollFactor(0)
+    this.playerBarBg.setStrokeStyle(5, 0x848484)
+
+    // HP bar fill
+    this.playerBar = this.scene.add.rectangle(PLAYER_BAR_X, PLAYER_BAR_Y, PLAYER_BAR_MAX_W, PLAYER_BAR_H, 0x22cc44)
+      .setOrigin(0, 0)
+      .setDepth(D + 2)
       .setScrollFactor(0)
 
-    // ── Texto "WANDERLEI" — cobre o texto "KEN" da imagem (~x=163, y=82 em coords orig)
-    // Na tela: borda esquerda da imagem = width - hrW
-    const wNameX = width - hrW + Math.round(162 * SCALE)
-    this.scene.add.text(wNameX, Math.round(84 * SCALE), 'WANDERLEI', {
-      fontSize: `${Math.round(10 * SCALE)}px`, color: '#ffdd44',
-      fontFamily: 'monospace', stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(1, 0).setDepth(this.D + 3).setScrollFactor(0)
+    // "HP" label
+    this.scene.add.text(262, 102, 'HP', {
+      fontSize: '45px',
+      color: '#d1d1d1',
+      fontFamily: 'monospace',
+    }).setOrigin(0, 0).setDepth(D + 3).setScrollFactor(0)
 
-    // ── Wave + inimigos (centro topo) ──────────────────────
-    const centerY1 = Math.round(hlH * 0.22)
-    const centerY2 = Math.round(hlH * 0.52)
-    const centerY3 = Math.round(hlH * 0.74)
+    // HP% texto right-aligned
+    this.playerHPPct = this.scene.add.text(797, 130, '100%', {
+      fontSize: '40px',
+      color: '#333333',
+      fontFamily: '"Pixelify Sans", monospace',
+    }).setOrigin(1, 0.5).setDepth(D + 3).setScrollFactor(0)
 
-    this.waveText = this.scene.add.text(width / 2, centerY1, 'WAVE 1', {
-      fontSize: '20px', color: '#ffdd00', fontFamily: 'monospace',
-      stroke: '#000000', strokeThickness: 4,
-    }).setDepth(this.D).setOrigin(0.5, 0.5).setScrollFactor(0)
+    // ════════════════════════════════════════════════════════════════════
+    // CENTRO — Wave + Timer
+    // ════════════════════════════════════════════════════════════════════
 
-    this.enemyCountText = this.scene.add.text(width / 2, centerY2, '', {
-      fontSize: '13px', color: '#ff9999', fontFamily: 'monospace',
-      stroke: '#000', strokeThickness: 2,
-    }).setDepth(this.D).setOrigin(0.5, 0.5).setScrollFactor(0)
+    // Wave text
+    this.waveText = this.scene.add.text(960, 51, 'WAVE 1 / 1', {
+      fontSize: '46px',
+      color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 5,
+    }).setOrigin(0.5).setDepth(D).setScrollFactor(0)
 
-    this.scoreText = this.scene.add.text(width / 2, centerY3, 'SCORE: 0', {
-      fontSize: '14px', color: '#ffffff', fontFamily: 'monospace',
-      stroke: '#000000', strokeThickness: 3,
-    }).setDepth(this.D).setOrigin(0.5, 0.5).setScrollFactor(0)
+    // Timer box bg
+    this.scene.add.rectangle(842, 88, 236, 86, 0xdfdfdf)
+      .setOrigin(0, 0)
+      .setDepth(D)
+      .setScrollFactor(0)
+      .setStrokeStyle(8, 0x848484)
 
-    // ── Combo (centro da tela) ──────────────────────────────
+    // Timer text
+    this.timerText = this.scene.add.text(960, 131, '00:00', {
+      fontSize: '80px',
+      color: '#f3c204',
+      fontFamily: '"Pixelify Sans", monospace',
+    }).setOrigin(0.5).setDepth(D + 1).setScrollFactor(0)
+
+    // Score (abaixo do wave)
+    this.scoreText = this.scene.add.text(960, 180, 'SCORE: 0', {
+      fontSize: '28px',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(D).setScrollFactor(0)
+
+    // Enemy count
+    this.enemyCountText = this.scene.add.text(960, 163, '', {
+      fontSize: '22px',
+      color: '#ff9999',
+      fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(D).setScrollFactor(0)
+
+    // ════════════════════════════════════════════════════════════════════
+    // LADO DIREITO — Wand
+    // ════════════════════════════════════════════════════════════════════
+
+    // Portrait background
+    this.wandPortraitBg = this.scene.add.rectangle(1692, 42, 185, 185, 0x722a2a)
+      .setOrigin(0, 0)
+      .setDepth(D + 1)
+      .setScrollFactor(0)
+    this.wandPortraitBg.setStrokeStyle(12, 0xf3c204)
+
+    // Wand image mascarada
+    const wandMaskShape = this.scene.make.graphics()
+    wandMaskShape.fillStyle(0xffffff)
+    wandMaskShape.fillRect(1692, 42, 185, 185)
+    const wandMask = wandMaskShape.createGeometryMask()
+
+    this.wandPortraitImg = this.scene.add.image(1784, 134, 'wand')
+      .setDisplaySize(185, 185)
+      .setOrigin(0.5, 0.5)
+      .setDepth(D + 1)
+      .setScrollFactor(0)
+      .setMask(wandMask)
+
+    // Wand nome (right-aligned)
+    this.scene.add.text(1670, 47, 'WANDERLEI', {
+      fontSize: '54px',
+      color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 6,
+    }).setOrigin(1, 0).setDepth(D + 2).setScrollFactor(0)
+
+    // Wand HP bar bg
+    this.wandBarBg = this.scene.add.rectangle(WAND_BAR_X, WAND_BAR_Y, WAND_BAR_MAX_W, WAND_BAR_H, 0xd5d5d5)
+      .setOrigin(0, 0)
+      .setDepth(D + 1)
+      .setScrollFactor(0)
+    this.wandBarBg.setStrokeStyle(5, 0x848484)
+
+    // Wand HP bar fill — âncora na direita
+    this.wandBar = this.scene.add.rectangle(WAND_BAR_ANCHOR_X, WAND_BAR_Y, WAND_BAR_MAX_W, WAND_BAR_H, 0xdd3311)
+      .setOrigin(1, 0)
+      .setDepth(D + 2)
+      .setScrollFactor(0)
+
+    // "HP" label right-aligned
+    this.scene.add.text(1658, 102, 'HP', {
+      fontSize: '45px',
+      color: '#d1d1d1',
+      fontFamily: 'monospace',
+    }).setOrigin(1, 0).setDepth(D + 3).setScrollFactor(0)
+
+    // Wand HP% texto
+    this.wandHPPct = this.scene.add.text(1123, 130, '100%', {
+      fontSize: '40px',
+      color: '#333333',
+      fontFamily: '"Pixelify Sans", monospace',
+    }).setOrigin(0, 0.5).setDepth(D + 3).setScrollFactor(0)
+
+    // ════════════════════════════════════════════════════════════════════
+    // EXTRAS
+    // ════════════════════════════════════════════════════════════════════
+
+    // Combo (centro da tela)
     this.comboText = this.scene.add.text(width / 2, 200, '', {
-      fontSize: '52px', color: '#ff8800', fontFamily: 'monospace',
-      stroke: '#000000', strokeThickness: 6,
-    }).setDepth(this.D).setOrigin(0.5, 0.5).setScrollFactor(0).setAlpha(0)
+      fontSize: '52px',
+      color: '#ff8800',
+      fontFamily: 'monospace',
+      stroke: '#000000',
+      strokeThickness: 6,
+    }).setDepth(D).setOrigin(0.5, 0.5).setScrollFactor(0).setAlpha(0)
 
-    // ── Flash de dano ──────────────────────────────────────
-    this.damageFlash = this.scene.add.rectangle(width / 2, height / 2,
-      width, height, 0xff0000, 0)
-      .setDepth(this.D - 1).setScrollFactor(0)
+    // Flash de dano (tela inteira)
+    this.damageFlash = this.scene.add.rectangle(width / 2, height / 2, width, height, 0xff0000, 0)
+      .setDepth(D - 1)
+      .setScrollFactor(0)
   }
 
-  // ── Atualizações ──────────────────────────────────────────
+  // ── API pública ──────────────────────────────────────────────────────
 
   updatePlayerHP(current: number, max: number) {
     const r = Math.max(0, current / max)
-    this.playerBar.setDisplaySize(this.playerBarMaxW * r, this.playerBar.height)
-    this.playerBar.setFillStyle(r > 0.5 ? 0x22cc44 : r > 0.25 ? 0xddaa00 : 0xdd2222)
-    this.playerHPText.setText(`${Math.ceil(current)}`)
+    const w = Math.round(PLAYER_BAR_MAX_W * r)
+    this.playerBar.setSize(w, PLAYER_BAR_H)
+    const color = r > 0.5 ? 0x22cc44 : r > 0.25 ? 0xddaa00 : 0xdd2222
+    this.playerBar.setFillStyle(color)
+    this.playerHPPct.setText(`${Math.ceil(r * 100)}%`)
   }
 
   updateWandHP(current: number, max: number) {
     const r = Math.max(0, current / max)
-    this.wandBar.setDisplaySize(this.wandBarMaxW * r, this.wandBar.height)
+    const w = Math.round(WAND_BAR_MAX_W * r)
+    this.wandBar.setSize(w, WAND_BAR_H)
+    this.wandHPPct.setText(`${Math.ceil(r * 100)}%`)
     this.damageFlash.setAlpha(0.3)
     this.scene.tweens.add({ targets: this.damageFlash, alpha: 0, duration: 350 })
     if (current <= 0) this.setWandKO()
@@ -223,8 +261,13 @@ export class HUD {
   setWandKO() {
     if (this.wandKO) return
     this.wandKO = true
-    this.wandPortrait.setTexture('wand-ko')
-    this.scene.tweens.add({ targets: this.wandPortrait, alpha: 0.4, duration: 300, yoyo: true, repeat: 2 })
+    this.scene.tweens.add({
+      targets: this.wandPortraitImg,
+      alpha: 0.4,
+      duration: 300,
+      yoyo: true,
+      repeat: 2,
+    })
   }
 
   updateWave(wave: number, total: number) {
@@ -239,15 +282,32 @@ export class HUD {
     this.enemyCountText.setText(count > 0 ? `▼ ${count} inimigos` : '')
   }
 
+  updateTime(seconds: number) {
+    const m = Math.floor(seconds / 60)
+    const s = Math.floor(seconds % 60)
+    const mm = String(m).padStart(2, '0')
+    const ss = String(s).padStart(2, '0')
+    this.timerText.setText(`${mm}:${ss}`)
+  }
+
   setPlayerName(name: string) {
-    this.playerLabel.setText(name.toUpperCase())
+    this.playerNameText.setText(name.toUpperCase())
+    const textureKey = `${name}-sv`
+    if (this.scene.textures.exists(textureKey)) {
+      this.playerPortraitSprite.setTexture(textureKey)
+    } else {
+      this.playerPortraitSprite.setTexture('wand')
+    }
   }
 
   showCombo(count: number) {
-    if (count < 2) { this.comboText.setAlpha(0); return }
+    if (count < 2) {
+      this.comboText.setAlpha(0)
+      return
+    }
     const colors = ['#ff8800', '#ff5500', '#ff2200', '#ff0000', '#ff00ff']
-    const color  = colors[Math.min(count - 2, colors.length - 1)]
-    const scale  = 1 + Math.min(count * 0.06, 0.5)
+    const color = colors[Math.min(count - 2, colors.length - 1)]
+    const scale = 1 + Math.min(count * 0.06, 0.5)
     this.comboText.setText(`x${count} COMBO!`).setColor(color)
     this.scene.tweens.killTweensOf(this.comboText)
     this.comboText.setAlpha(1).setScale(scale * 1.3)
@@ -259,17 +319,23 @@ export class HUD {
     const { width, height } = this.scene.scale
     const label = isBoss ? '⚠  BOSS WAVE!' : `— WAVE ${wave} —`
     const color = isBoss ? '#ff3300' : '#ffdd00'
-    const size  = isBoss ? '80px' : '72px'
+    const size = isBoss ? '80px' : '72px'
 
     const txt = this.scene.add.text(width / 2, height / 2 - 40, label, {
-      fontSize: size, color, fontFamily: 'monospace',
-      stroke: '#000000', strokeThickness: 10,
+      fontSize: size,
+      color,
+      fontFamily: 'monospace',
+      stroke: '#000000',
+      strokeThickness: 10,
     }).setDepth(150).setOrigin(0.5).setScrollFactor(0).setAlpha(0).setScale(0.6)
 
     this.scene.tweens.add({ targets: txt, alpha: 1, scale: 1, duration: 220, ease: 'Back.Out' })
     this.scene.tweens.add({
-      targets: txt, alpha: 0, scale: 0.8,
-      duration: 280, delay: isBoss ? 1100 : 700,
+      targets: txt,
+      alpha: 0,
+      scale: 0.8,
+      duration: 280,
+      delay: isBoss ? 1100 : 700,
       ease: 'Power2',
       onComplete: () => txt.destroy(),
     })
@@ -280,14 +346,20 @@ export class HUD {
   showWaveComplete() {
     const { width, height } = this.scene.scale
     const txt = this.scene.add.text(width / 2, height / 2 - 40, '✓ WAVE COMPLETA!', {
-      fontSize: '56px', color: '#44ff88', fontFamily: 'monospace',
-      stroke: '#000000', strokeThickness: 8,
+      fontSize: '56px',
+      color: '#44ff88',
+      fontFamily: 'monospace',
+      stroke: '#000000',
+      strokeThickness: 8,
     }).setDepth(150).setOrigin(0.5).setScrollFactor(0).setAlpha(0).setScale(0.7)
 
     this.scene.tweens.add({ targets: txt, alpha: 1, scale: 1, duration: 200, ease: 'Back.Out' })
     this.scene.tweens.add({
-      targets: txt, alpha: 0, y: height / 2 - 80,
-      duration: 300, delay: 900,
+      targets: txt,
+      alpha: 0,
+      y: height / 2 - 80,
+      duration: 300,
+      delay: 900,
       onComplete: () => txt.destroy(),
     })
   }
@@ -295,12 +367,18 @@ export class HUD {
   showMuteStatus(muted: boolean) {
     const { width } = this.scene.scale
     const txt = this.scene.add.text(width / 2, 200, muted ? '🔇 SOM DESLIGADO' : '🔊 SOM LIGADO', {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'monospace',
-      stroke: '#000', strokeThickness: 3,
+      fontSize: '20px',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      stroke: '#000',
+      strokeThickness: 3,
     }).setDepth(160).setOrigin(0.5).setScrollFactor(0)
 
     this.scene.tweens.add({
-      targets: txt, alpha: 0, duration: 400, delay: 900,
+      targets: txt,
+      alpha: 0,
+      duration: 400,
+      delay: 900,
       onComplete: () => txt.destroy(),
     })
   }

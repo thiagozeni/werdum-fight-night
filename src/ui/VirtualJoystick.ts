@@ -30,15 +30,14 @@ export class VirtualJoystick {
     this.scene = scene
     this.isTouch = scene.sys.game.device.input.touch
 
-    const { width, height } = scene.scale
-    this.bX = 160
-    this.bY = height - 240
+    this.bX = 60
+    this.bY = 737
 
     if (!this.isTouch) return
 
     scene.input.addPointer(3)
     this.buildJoystick()
-    this.buildButtons(width, height)
+    this.buildButtons()
   }
 
   private buildJoystick() {
@@ -84,11 +83,11 @@ export class VirtualJoystick {
     })
   }
 
-  private buildButtons(width: number, height: number) {
+  private buildButtons() {
     const btns = [
-      { name: 'punch', label: 'J', x: width - 680, y: height - 260, color: 0xff5544 },
-      { name: 'kick',  label: 'K', x: width - 490, y: height - 300, color: 0x4488ff },
-      { name: 'block', label: '🛡', x: width - 300, y: height - 340, color: 0xffaa33 },
+      { name: 'punch', label: 'J', x: 1506, y: 875, color: 0xff5544 },
+      { name: 'kick',  label: 'K', x: 1666, y: 835, color: 0x4488ff },
+      { name: 'block', label: '🛡', x: 1826, y: 775, color: 0xffaa33 },
     ]
 
     btns.forEach(btn => {
