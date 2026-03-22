@@ -11,13 +11,26 @@ export class BootScene extends Phaser.Scene {
     const bar = this.add.rectangle(width / 2, height / 2, 4, 20, 0xffffff)
     this.load.on('progress', (v: number) => bar.setDisplaySize(v * 400, 20))
 
-    // Cenário
-    this.load.image('arena', 'imgs/cenario/real.png')
+    // Cenários
+    this.load.image('arena',        'imgs/cenario/real.png')
+    this.load.image('bg-cachorradas', 'imgs/cenario/cachorradas.png')
 
-    // Personagens jogáveis (imagem estática — usada na tela de seleção)
-    this.load.image('werdum',      'imgs/personagens/werdum.png')
-    this.load.image('dida',        'imgs/personagens/dida.png')
-    this.load.image('thor',        'imgs/personagens/thor.png')
+    // Assets da tela de título
+    this.load.image('logo',            'imgs/elementos/logo.png')
+    this.load.image('good-guys',       'imgs/elementos/good-guys.png')
+    this.load.image('bad-guys',        'imgs/elementos/bad-guys.png')
+    this.load.image('good-guys-loose', 'imgs/elementos/good-guys-loose.png')
+    this.load.image('good-guys-win',   'imgs/elementos/good-guys-win.png')
+
+    // Personagens jogáveis (imagens estáticas — usadas na tela de seleção)
+    this.load.image('werdum',    'imgs/personagens/werdum.png')
+    this.load.image('dida',      'imgs/personagens/dida.png')
+    this.load.image('thor',      'imgs/personagens/thor.png')
+
+    // Side-views para a tela de seleção
+    this.load.image('werdum-sv', 'imgs/personagens/werdum_sideview.png')
+    this.load.image('dida-sv',   'imgs/personagens/dida-sideview.png')
+    this.load.image('thor-sv',   'imgs/personagens/thor-sideview.png')
 
     // Spritesheets animados do Werdum
     this.load.spritesheet('werdum-idle-sheet',      'sprites/werdum/werdum-idle-sheet.png',      { frameWidth: 160, frameHeight: 240, endFrame: 7  })
@@ -120,10 +133,6 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('thor-hit-sheet',       'sprites/thor/thor-hit-sheet.png',       { frameWidth: 224, frameHeight: 240, endFrame: 35 })
     this.load.spritesheet('thor-block-sheet',     'sprites/thor/thor-block-sheet.png',     { frameWidth: 160, frameHeight: 240, endFrame: 15 })
     this.load.spritesheet('thor-knockdown-sheet', 'sprites/thor/thor-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-
-    // Aliados sideview (tela de seleção)
-    this.load.image('dida-sv', 'imgs/personagens/dida-sideview.png')
-    this.load.image('thor-sv', 'imgs/personagens/thor-sideview.png')
 
     // HUD elements
     this.load.image('hud-left',  'imgs/elementos/hud/hud-left.png')
