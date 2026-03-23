@@ -32,7 +32,7 @@ export class YouWinScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(2)
 
     // Arte celebração
-    this.add.image(808, 299, 'good-guys-win').setOrigin(0, 0).setDepth(2)
+    this.add.image(878, 299, 'good-guys-win').setOrigin(0, 0).setDepth(2)
 
     // Stats da partida
     const score  = this.registry.get('youWinScore')  as number ?? 0
