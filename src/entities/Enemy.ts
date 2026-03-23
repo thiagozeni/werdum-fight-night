@@ -220,7 +220,6 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this.staggerTimer = this.isBoss ? 400 : 650
     this.attackCooldown = this.isBoss ? 1200 : 1800
     this.animLocked = false
-    this.playHitAnim()
     // Pequeno knockback — empurra para longe do player
     const dx = this.x - this.playerRef.x
     const pushDist = this.isBoss ? 40 : 70
