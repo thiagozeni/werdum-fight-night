@@ -12,6 +12,9 @@ export class BootScene extends Phaser.Scene {
     const bar = this.add.rectangle(width / 2, height / 2, 4, 20, 0xffffff)
     this.load.on('progress', (v: number) => bar.setDisplaySize(v * 400, 20))
 
+    // Vídeo de intro
+    this.load.video('intro-video', 'videos/intro.mp4', true)
+
     // Cenários
     this.load.image('intro-bg',         'imgs/cenario/intro-bg.png')
     this.load.image('arena',            'imgs/cenario/real.png')

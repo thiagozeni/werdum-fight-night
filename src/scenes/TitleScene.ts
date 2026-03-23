@@ -15,10 +15,9 @@ export class TitleScene extends Phaser.Scene {
     sound.startIntroMusic()
 
     // Vídeo de fundo em loop
-    this.bgVideo = this.add.video(width / 2, height / 2, undefined as unknown as string)
-    this.bgVideo.loadURL('videos/intro.mp4', true)
+    this.bgVideo = this.add.video(width / 2, height / 2, 'intro-video')
     this.bgVideo.setDisplaySize(width, height).setDepth(0)
-    this.bgVideo.on('created', () => { this.bgVideo?.play(true) })
+    this.bgVideo.play(true)
 
     // PRESS START (pisca)
     const pressStart = this.add.text(960, 630, 'PRESS START', {
