@@ -59,7 +59,7 @@ export class ProtectedChar extends Phaser.GameObjects.Image {
         stars.forEach((star, i) => {
           const a = angle + (i / count) * Math.PI * 2
           star.setPosition(
-            this.x + 120 + Math.cos(a) * orbitX,
+            this.x + 115 + Math.cos(a) * orbitX,
             headY       + Math.sin(a) * orbitY,
           )
           star.setAngle(star.angle + 4)  // gira no próprio eixo
