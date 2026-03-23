@@ -31,7 +31,7 @@ export class TitleScene extends Phaser.Scene {
     applyScale()
 
     // Estrelas girando sobre a cabeça do Wand na intro
-    this.createDizzyStars(width * 0.95 - 20, height * 0.40 - 20)
+    this.createDizzyStars(width * 0.95 - 20, height * 0.40 - 30)
 
     // PRESS START (pisca)
     const pressStart = this.add.text(960, 630, 'PRESS START', {
@@ -76,7 +76,7 @@ export class TitleScene extends Phaser.Scene {
   private createDizzyStars(cx: number, cy: number) {
     const orbitX = 28
     const orbitY = 10
-    const count  = 3
+    const count  = 5
     const stars  = Array.from({ length: count }, () =>
       this.add.star(cx, cy, 5, 4, 9, 0xffe500).setDepth(5)
     )
