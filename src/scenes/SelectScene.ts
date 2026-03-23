@@ -3,17 +3,17 @@ import { sound } from '../systems/SoundManager'
 import { getHighScore } from '../systems/HighScore'
 
 const CHARACTERS = [
-  { key: 'werdum', name: 'WERDUM', sv: 'werdum-sv' },
-  { key: 'dida',   name: 'DIDA',   sv: 'dida-sv'   },
-  { key: 'thor',   name: 'THOR',   sv: 'thor-sv'   },
+  { key: 'werdum', name: 'WERDUM', sv: 'werdum-sv', perfil: 'werdum-perfil', previewY: 119 },
+  { key: 'dida',   name: 'DIDA',   sv: 'dida-sv',   perfil: 'dida-perfil',   previewY: 149 },
+  { key: 'thor',   name: 'THOR',   sv: 'thor-sv',   perfil: 'thor-perfil',   previewY: 119 },
 ]
 
 // Posições dos boxes (Figma)
 const BOX_Y = 608
 const BOXES = [
-  { key: 'werdum', x: 648,  w: 280, h: 315 },
-  { key: 'dida',   x: 948,  w: 281, h: 315 },
-  { key: 'thor',   x: 1248, w: 280, h: 315 },
+  { x: 648,  w: 280, h: 315 },
+  { x: 948,  w: 281, h: 315 },
+  { x: 1248, w: 280, h: 315 },
 ]
 
 export class SelectScene extends Phaser.Scene {
@@ -36,9 +36,9 @@ export class SelectScene extends Phaser.Scene {
 
     const { width, height } = this.scale
 
-    // Fundo sem crowd
-    this.add.image(width / 2, height / 2, 'sem-crowd').setDisplaySize(width, height).setDepth(0)
-    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(1)
+    // Fundo
+    this.add.image(width / 2, height / 2, 'select-player-bg').setDisplaySize(width, height).setDepth(0)
+    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.35).setDepth(1)
 
     // "SELECT PLAYER"
     this.add.text(648, 123, 'SELECT PLAYER', {
@@ -49,21 +49,24 @@ export class SelectScene extends Phaser.Scene {
     // High score
     const hs = getHighScore(this.registry)
     if (hs > 0) {
-      this.add.text(960, 68, `BEST: ${hs.toLocaleString()}`, {
+      this.add.text(960, 68, `BEST SCORE: ${hs.toLocaleString()}`, {
         fontSize: '18px', color: '#aaddff', fontFamily: '"Press Start 2P", monospace',
         stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5).setDepth(2)
     }
 
     // Preview sideview (esquerda — sobrepõe borda esquerda)
-    this.previewSprite = this.add.image(-159, 159, 'werdum-sv').setOrigin(0, 0).setDepth(2)
+    this.previewSprite = this.add.image(-159, 119, 'werdum-sv')
+      .setDisplaySize(930, 1382)
+      .setOrigin(0, 0)
+      .setDepth(2)
 
     // Nome do personagem
-    this.previewName = this.add.text(123, 710, 'WERDUM', {
-      fontSize: '80px', color: '#f8f7f7',
+    this.previewName = this.add.text(306, 710, 'WERDUM', {
+      fontSize: '56px', color: '#f8f7f7',
       fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0, 0).setDepth(2)
+      stroke: '#000000', strokeThickness: 12,
+    }).setOrigin(0.5, 0).setDepth(2)
 
     // Boxes dos 3 personagens
     BOXES.forEach((box, i) => {
@@ -74,23 +77,20 @@ export class SelectScene extends Phaser.Scene {
       this.add.rectangle(box.x, BOX_Y, box.w, box.h, 0x181c21)
         .setOrigin(0, 0).setDepth(2)
 
-      // Borda (será atualizada pelo selectChar)
-      const border = this.add.rectangle(cx, cy, box.w, box.h, 0x000000, 0)
-        .setStrokeStyle(8, 0xa79ca0).setDepth(3)
+      // Imagem do personagem
+      this.add.image(cx, cy, CHARACTERS[i].perfil)
+        .setDisplaySize(box.w, box.h)
+        .setOrigin(0.5, 0.5)
+        .setDepth(3)
+
+      // Borda (acima da imagem, será atualizada pelo selectChar)
+      const border = this.add.rectangle(cx, cy, box.w - 4, box.h - 4, 0x000000, 0)
+        .setStrokeStyle(8, 0xa79ca0).setDepth(4)
       this.boxBorders.push(border)
-
-      // Sprite do personagem
-      const sprite = this.add.sprite(cx, cy + 20, CHARACTERS[i].key)
-        .setScale(0.85).setDepth(3)
-
-      // Máscara retangular
-      const mask = this.make.graphics()
-      mask.fillRect(box.x, BOX_Y, box.w, box.h)
-      sprite.setMask(mask.createGeometryMask())
 
       // Interativo
       const hitArea = this.add.rectangle(cx, cy, box.w, box.h, 0x000000, 0)
-        .setDepth(4).setInteractive({ useHandCursor: true })
+        .setDepth(5).setInteractive({ useHandCursor: true })
       hitArea.on('pointerdown', () => {
         if (this.selectedIndex === i) this.confirmSelection()
         else this.selectChar(i)
@@ -104,11 +104,11 @@ export class SelectScene extends Phaser.Scene {
     this.add.rectangle(wandX, BOX_Y, wandW, wandH, 0x181c21).setOrigin(0, 0).setDepth(2)
     this.add.rectangle(wandCx, wandCy, wandW, wandH, 0x000000, 0)
       .setStrokeStyle(5, 0xa79ca0).setDepth(3)
-    const wandSprite = this.add.sprite(wandCx, wandCy + 20, 'wand').setScale(0.85).setDepth(3)
-    wandSprite.setTint(0x555566)
-    const wandMask = this.make.graphics()
-    wandMask.fillRect(wandX, BOX_Y, wandW, wandH)
-    wandSprite.setMask(wandMask.createGeometryMask())
+    this.add.image(wandCx, wandCy, 'wand-perfil')
+      .setDisplaySize(wandW, wandH)
+      .setOrigin(0.5, 0.5)
+      .setDepth(3)
+      .setTint(0xaaaacc)
     this.add.text(wandCx, wandCy - 20, 'KNOCKED\nOUT', {
       fontSize: '24px', color: '#cdcdcd', fontFamily: '"Press Start 2P", monospace',
       align: 'center', stroke: '#000000', strokeThickness: 3,
@@ -121,7 +121,7 @@ export class SelectScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 5,
     }).setOrigin(0.5, 0).setDepth(4)
 
-    this.selectorArrow = this.add.text(813, 577, '▼', {
+    this.selectorArrow = this.add.text(813, 552, '▼', {
       fontSize: '36px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
@@ -146,6 +146,8 @@ export class SelectScene extends Phaser.Scene {
 
     // Atualiza preview sideview e nome
     this.previewSprite.setTexture(char.sv)
+    this.previewSprite.setDisplaySize(930, 1382)
+    this.previewSprite.setY(char.previewY)
     this.previewName.setText(char.name)
 
     // Atualiza bordas
@@ -157,11 +159,10 @@ export class SelectScene extends Phaser.Scene {
       }
     })
 
-    // Move cursor 1P/seta
+    // Move cursor 1P/seta — centralizado no box selecionado
     const boxCx = BOXES[index].x + BOXES[index].w / 2
-    const cursorOffsetX = boxCx - (BOXES[0].x + BOXES[0].w / 2)
-    this.selector1P.setX(756 + cursorOffsetX)
-    this.selectorArrow.setX(813 + cursorOffsetX)
+    this.selector1P.setX(boxCx)
+    this.selectorArrow.setX(boxCx)
   }
 
   private confirmSelection() {

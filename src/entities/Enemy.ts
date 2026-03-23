@@ -16,13 +16,13 @@ interface EnemyStats {
 }
 
 const STATS: Record<EnemyType, EnemyStats> = {
-  weak:       { hp: 40,  speed: 75,  damageToPlayer: 10, damageToWand: 12, scale: 1.00 },
-  fat:        { hp: 130, speed: 45,  damageToPlayer: 18, damageToWand: 20, scale: 1.00 },
-  strong:     { hp: 90,  speed: 60,  damageToPlayer: 15, damageToWand: 18, scale: 1.00 },
-  chair:      { hp: 50,  speed: 65,  damageToPlayer: 28, damageToWand: 30, scale: 1.00 },
-  boss_son:   { hp: 180, speed: 100, damageToPlayer: 18, damageToWand: 20, scale: 1.00, isBoss: true },
-  boss_coach: { hp: 350, speed: 40,  damageToPlayer: 30, damageToWand: 35, scale: 1.00, isBoss: true },
-  boss_popo:  { hp: 300, speed: 70,  damageToPlayer: 25, damageToWand: 30, scale: 1.00, isBoss: true },
+  weak:       { hp: 40,  speed: 75,  damageToPlayer: 10, damageToWand: 12, scale: 0.90 },
+  fat:        { hp: 130, speed: 45,  damageToPlayer: 18, damageToWand: 20, scale: 0.90 },
+  strong:     { hp: 90,  speed: 60,  damageToPlayer: 15, damageToWand: 18, scale: 0.90 },
+  chair:      { hp: 50,  speed: 65,  damageToPlayer: 18, damageToWand: 20, scale: 0.90 },
+  boss_coach: { hp: 180, speed: 55,  damageToPlayer: 18, damageToWand: 20, scale: 0.90, isBoss: true },
+  boss_son:   { hp: 280, speed: 85,  damageToPlayer: 25, damageToWand: 28, scale: 0.90, isBoss: true },
+  boss_popo:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true },
 }
 
 // Personagens com spritesheets de animação completos
@@ -124,7 +124,6 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this.frameH = this.height  // captura antes de qualquer setScale
 
     if (stats.isBoss) {
-      this.setTint(0xffd700)
       this.BAR_W = 80
     }
 
@@ -184,7 +183,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this._lastScaleY = this.y
     const stats = STATS[this.enemyType]
     const t = Phaser.Math.Clamp((this.y - RING.top) / (RING.bottom - RING.top), 0, 1)
-    this.dispH = Phaser.Math.Linear(204, 420, t)
+    this.dispH = Phaser.Math.Linear(204, 360, t)
     const scaleY = this.dispH / this.frameH
     this.setScale(scaleY * stats.scale, scaleY)
   }
@@ -199,7 +198,6 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     if (this.enemyType === 'boss_popo' && !this.inPhase2 && this.hp < 100) {
       this.inPhase2 = true
       this.currentSpeed = this.baseSpeed * 1.4
-      this.setTint(0xff6600)
       this.scene.cameras.main.shake(200, 0.008)
     }
 
@@ -224,7 +222,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
       const minDist = 48
       if (dist < minDist && dist > 0) {
         const force = (minDist - dist) / minDist * 1.5
-        this.x = Phaser.Math.Clamp(this.x + (dx / dist) * force, RING.left, RING.right)
+        this.x = Phaser.Math.Clamp(this.x + (dx / dist) * force, RING.leftAt(this.y), RING.rightAt(this.y))
         this.y = Phaser.Math.Clamp(this.y + (dy / dist) * force * 0.6, RING.top, RING.bottom)
       }
     }
@@ -235,7 +233,16 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     if (this.scene.anims.exists(`${this.charKey}-hit`)) {
       this.animLocked = true
       this.play(`${this.charKey}-hit`)
+      return
     }
+    // Sem animação de hit: flash branco como feedback visual
+    const hadTint = this.isTinted
+    const prevTint = this.tintTopLeft
+    this.setTint(0xffffff)
+    this.scene.time.delayedCall(120, () => {
+      if (this.isDead) return
+      hadTint ? this.setTint(prevTint) : this.clearTint()
+    })
   }
 
   private enterKnockdown() {
@@ -256,19 +263,32 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this.hpBarBg.destroy()
     this.hpBar.destroy()
     this.aggroIcon.destroy()
-    sound.enemyDeath()
-    this.scene.tweens.add({
-      targets: this,
-      alpha: 0, y: this.y + 20,
-      duration: 400,
-      onComplete: () => this.destroy(),
-    })
+    this.isBoss ? sound.bossDeath() : sound.enemyDeath()
+
+    const fadeOut = () => {
+      this.scene.tweens.add({
+        targets: this,
+        alpha: 0, y: this.y + 20,
+        duration: 400,
+        onComplete: () => this.destroy(),
+      })
+    }
+
+    // Toca animação de knockdown até o fim, só então inicia o fade-out
+    if (this.hasAnims && this.scene.anims.exists(`${this.charKey}-knockdown`)) {
+      this.animLocked = true
+      this.play(`${this.charKey}-knockdown`)
+      this.once('animationcomplete', fadeOut)
+    } else {
+      fadeOut()
+    }
   }
 
-  private playAttackAnim() {
+  private playAttackAnim(kickOnly = false) {
     if (!this.hasAnims || this.animLocked) return
     this.attackCount++
-    const useKick = (this.attackCount % 3 === 0) && this.scene.textures.exists(`${this.charKey}-kick-sheet`)
+    const hasKick = this.scene.textures.exists(`${this.charKey}-kick-sheet`)
+    const useKick = kickOnly ? hasKick : (this.attackCount % 3 === 0 && hasKick)
     const animKey = useKick ? `${this.charKey}-kick` : `${this.charKey}-punch`
     if (this.scene.anims.exists(animKey)) {
       this.animLocked = true
@@ -333,7 +353,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     const dist = Math.sqrt(dx * dx + dy * dy)
     const arrivalDist = this.target === 'wand' ? 60 : 120
 
-    if (dist < arrivalDist) {
+    if (dist < arrivalDist && Math.abs(dy) < 30) {
       if (this.target === 'wand') {
         this.aiState = 'waitBeforeAttack'
         this.waitTimer = 1000
@@ -345,8 +365,8 @@ export class Enemy extends Phaser.GameObjects.Sprite {
 
     const dt = delta / 1000
     const nx = dx / dist; const ny = dy / dist
-    this.x = Phaser.Math.Clamp(this.x + nx * this.currentSpeed * dt,       RING.left, RING.right)
     this.y = Phaser.Math.Clamp(this.y + ny * this.currentSpeed * 0.7 * dt, RING.top,  RING.bottom)
+    this.x = Phaser.Math.Clamp(this.x + nx * this.currentSpeed * dt,       RING.leftAt(this.y), RING.rightAt(this.y))
     this.setFlipX(dx < 0)
   }
 
@@ -357,19 +377,19 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     const dy = this.playerRef.y - this.y
     const dist = Math.sqrt(dx * dx + dy * dy)
 
-    if (dist < 120 && this.attackCooldown <= 0) { this.attackPlayer(); return }
+    if (dist < 120 && Math.abs(dy) < 30 && this.attackCooldown <= 0) { this.attackPlayer(); return }
     if (dist >= 120) { this.aiState = 'approach'; return }
 
     const dt = delta / 1000
-    this.x = Phaser.Math.Clamp(this.x + (dx / dist) * this.currentSpeed * dt,       RING.left, RING.right)
     this.y = Phaser.Math.Clamp(this.y + (dy / dist) * this.currentSpeed * 0.7 * dt, RING.top,  RING.bottom)
+    this.x = Phaser.Math.Clamp(this.x + (dx / dist) * this.currentSpeed * dt,       RING.leftAt(this.y), RING.rightAt(this.y))
     this.setFlipX(dx < 0)
   }
 
   private updateWait(delta: number) {
     this.waitTimer -= delta
     if (this.waitTimer <= 0) {
-      this.playAttackAnim()
+      this.playAttackAnim(true)
       this.scene.events.emit('enemyAttackWand', this)
       this.attackCooldown = this.isBoss ? 1000 : 1500
       this.aiState = 'approach'

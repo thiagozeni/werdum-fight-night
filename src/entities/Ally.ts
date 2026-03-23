@@ -8,23 +8,26 @@ type AllyState = 'idle' | 'moveToEnemy' | 'attack' | 'knockdown' | 'recover'
 const ANIMATED_ALLIES = new Set(['werdum', 'dida', 'thor'])
 
 const ALLY_STATS: Record<string, { speed: number; sizeScale: number; scaleH: number; svKey?: string }> = {
-  werdum: { speed: 80,  sizeScale: 0.75, scaleH: 0.72 },
-  dida:   { speed: 110, sizeScale: 1.00, scaleH: 1.00 },
-  thor:   { speed: 130, sizeScale: 1.00, scaleH: 1.00 },
+  werdum: { speed: 80,  sizeScale: 1.05, scaleH: 0.75 },
+  dida:   { speed: 110, sizeScale: 1.00, scaleH: 0.98 },
+  thor:   { speed: 130, sizeScale: 0.95, scaleH: 0.94 },
 }
 
-// Escala horizontal por animação — normaliza corpo visual (mesma referência do Player)
+// Escala horizontal por animação — normaliza corpo para ~120px/scaleY
 const ANIM_SCALE_H: Record<string, number> = {
-  'werdum-idle':        0.72,
-  'werdum-run':         0.72,
+  'werdum-idle':        0.75,
+  'werdum-run':         1.20,
   'werdum-punch':       0.61,
   'werdum-punch-combo': 0.61,
-  'werdum-knockdown':   0.72,
+  'werdum-knockdown':   0.75,
+  'dida-idle':          0.98,
+  'dida-run':           0.80,
+  'thor-idle':          0.94,
+  'thor-run':           0.89,
 }
 
 // Origem corrigida por animação (compensa conteúdo descentrado no frame)
 const ANIM_ORIGIN_X: Record<string, number> = {
-  'werdum-run':         104 / 192,
   'werdum-punch':       174 / 320,
   'werdum-punch-combo': 174 / 320,
 }
@@ -190,7 +193,7 @@ export class Ally extends Phaser.GameObjects.Sprite {
 
     if (dist < 75 && this.attackCooldown <= 0) {
       nearest.takeDamage(6)
-      this.attackCooldown = 600
+      this.attackCooldown = 900
       this.allyState = 'attack'
 
       // Animação de soco

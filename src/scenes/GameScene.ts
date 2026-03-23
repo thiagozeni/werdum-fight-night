@@ -9,7 +9,16 @@ import { spawnDamageNumber } from '../ui/DamageNumber'
 import { sound } from '../systems/SoundManager'
 import { saveHighScore } from '../systems/HighScore'
 
-export const RING = { left: 296, right: 1685, top: 535, bottom: 992 }
+export const RING = {
+  top: 650, bottom: 1000,
+  leftTop: 670,  leftBottom: 530,
+  rightTop: 1260, rightBottom: 1400,
+  // Limites laterais interpolados pela profundidade (y)
+  leftAt:  (y: number) => Phaser.Math.Linear(670, 530,  Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
+  rightAt: (y: number) => Phaser.Math.Linear(1260, 1400, Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
+  // Compat: limites extremos para código legado
+  left: 530, right: 1400,
+}
 
 interface WaveEnemy  { type: EnemyType; count: number }
 interface WaveConfig { id: number; enemies: WaveEnemy[]; spawnInterval: number; isBoss?: boolean }
@@ -22,11 +31,11 @@ const WAVES: WaveConfig[] = [
   { id: 5,  enemies: [{ type: 'weak',       count: 4 }, { type: 'chair',  count: 1 }],             spawnInterval: 1200 },
   { id: 6,  enemies: [{ type: 'weak',       count: 6 }, { type: 'strong', count: 2 }],             spawnInterval: 1100 },
   { id: 7,  enemies: [{ type: 'weak',       count: 5 }, { type: 'fat',    count: 1 }, { type: 'strong', count: 1 }], spawnInterval: 1000 },
-  { id: 8,  enemies: [{ type: 'weak',       count: 4 }, { type: 'chair',  count: 2 }, { type: 'fat',    count: 1 }], spawnInterval: 900  },
-  { id: 9,  enemies: [{ type: 'boss_son',   count: 1 }, { type: 'weak',   count: 3 }],             spawnInterval: 1500, isBoss: true },
-  { id: 10, enemies: [{ type: 'weak',       count: 6 }, { type: 'strong', count: 2 }, { type: 'fat', count: 1 }],   spawnInterval: 900  },
-  { id: 11, enemies: [{ type: 'boss_coach', count: 1 }, { type: 'weak',   count: 2 }],             spawnInterval: 2000, isBoss: true },
-  { id: 12, enemies: [{ type: 'boss_popo',  count: 1 }],                                           spawnInterval: 0,    isBoss: true },
+  { id: 8,  enemies: [{ type: 'boss_coach', count: 1 }, { type: 'weak',   count: 3 }],                              spawnInterval: 1500, isBoss: true },
+  { id: 9,  enemies: [{ type: 'weak',       count: 5 }, { type: 'strong', count: 2 }, { type: 'fat',    count: 1 }], spawnInterval: 900  },
+  { id: 10, enemies: [{ type: 'boss_son',   count: 1 }, { type: 'weak',   count: 3 }],                              spawnInterval: 1500, isBoss: true },
+  { id: 11, enemies: [{ type: 'weak',       count: 4 }, { type: 'strong', count: 2 }, { type: 'chair',  count: 1 }], spawnInterval: 900  },
+  { id: 12, enemies: [{ type: 'boss_popo',  count: 1 }, { type: 'weak',   count: 4 }],                              spawnInterval: 1200, isBoss: true },
 ]
 
 const ALL_CHARS = ['werdum', 'dida', 'thor']
@@ -50,11 +59,12 @@ export class GameScene extends Phaser.Scene {
   private isGameOver = false
   private isPaused = false
 
-  // Combo & score
+  // Combo, score & stats
   private score = 0
   private comboCount = 0
   private comboTimer = 0
-  private readonly COMBO_WINDOW = 2500
+  private readonly COMBO_WINDOW = 1800
+  private enemiesDefeated = 0
 
   // Timer
   private gameTimerMs = 0
@@ -78,15 +88,22 @@ export class GameScene extends Phaser.Scene {
     this.isPaused    = false
     this.enemies     = []
     this.allies      = []
-    this.score       = 0
-    this.comboCount  = 0
-    this.comboTimer  = 0
-    this.gameTimerMs = 0
+    this.score            = 0
+    this.comboCount       = 0
+    this.comboTimer       = 0
+    this.gameTimerMs      = 0
+    this.enemiesDefeated  = 0
+    this.attackCooldown   = 0
+    this.waveActive       = false
+    this.waveEndTimer     = 0
+    this.spawnQueue       = []
+    this.spawnTimer       = 0
 
     const selectedChar: string = this.registry.get('selectedChar') ?? 'werdum'
 
     // Fundo estático — cenário do jogo
-    this.add.image(960, 540, 'arena').setDisplaySize(1920, 1080).setDepth(0)
+    this.add.image(960, 540, 'game-bg').setDisplaySize(1920, 1080).setDepth(0)
+    this.add.image(960, 535, 'game-cordas').setDisplaySize(1920, 1080).setDepth(1000)
 
     // Wand (fundo direito do ringue)
     this.wand = new ProtectedChar(this, 1150, 710)
@@ -148,6 +165,7 @@ export class GameScene extends Phaser.Scene {
       this.registry.remove('continueFromWave')
     }
 
+    sound.startBgMusic()
     this.cameras.main.fadeIn(500, 0, 0, 0)
     this.time.delayedCall(1200, () => this.startNextWave())
   }
@@ -171,6 +189,7 @@ export class GameScene extends Phaser.Scene {
 
     this.player.move(moveInput, delta)
     this.player.update(delta)
+    this.hud.showKnockdownStatus(this.player.isKnockedDown)
 
     // Ataques
     this.attackCooldown = Math.max(0, this.attackCooldown - delta)
@@ -226,10 +245,34 @@ export class GameScene extends Phaser.Scene {
     // Colisão com o wand — impede personagens de atravessá-lo
     this.enforceWandCollision()
 
+    // Separação entre inimigos ↔ player e inimigos ↔ aliados
+    this.separateEnemiesFromChars()
+
     // Depth sorting pela posição lógica no ringue (não inclui offset do pulo)
     this.player.setDepth(this.player.groundY)
     this.wand.setDepth(this.wand.y)
     for (const a of this.allies) a.setDepth(a.y)
+  }
+
+  private separateEnemiesFromChars() {
+    const MIN_DIST = 52
+    const chars: { x: number; y: number }[] = [
+      { x: this.player.x, y: this.player.groundY },
+      ...this.allies.map(a => ({ x: a.x, y: a.y })),
+    ]
+    for (const enemy of this.enemies) {
+      if (enemy.isDead) continue
+      for (const char of chars) {
+        const dx = enemy.x - char.x
+        const dy = enemy.y - char.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < MIN_DIST && dist > 0) {
+          const force = (MIN_DIST - dist) / MIN_DIST * 1.5
+          enemy.y = Phaser.Math.Clamp(enemy.y + (dy / dist) * force * 0.6, RING.top, RING.bottom)
+          enemy.x = Phaser.Math.Clamp(enemy.x + (dx / dist) * force, RING.leftAt(enemy.y), RING.rightAt(enemy.y))
+        }
+      }
+    }
   }
 
   // ── Combate ─────────────────────────────────────────────
@@ -242,7 +285,6 @@ export class GameScene extends Phaser.Scene {
 
     if (type === 'punch') this.player.playPunchAnim()
     else this.player.playKickAnim()
-    type === 'punch' ? sound.punch() : sound.kick()
 
     const hitOriginX = type === 'punch' ? this.player.punchHitX : this.player.kickHitX
     let hitAny = false
@@ -261,9 +303,13 @@ export class GameScene extends Phaser.Scene {
         const faceY = enemy.y - enemy.displayHeight * 0.8
         spawnDamageNumber(this, enemy.x, faceY, finalDmg)
         this.spawnHitParticles(hitOriginX, faceY)
-        this.tweens.add({ targets: enemy, alpha: 0.3, duration: 70, yoyo: true })
+        this.tweens.add({ targets: enemy, alpha: 0.15, duration: 70, yoyo: true })
 
-        if (wasAlive && enemy.isDead) this.addScore(ENEMY_SCORE[enemy.enemyType])
+        if (wasAlive && enemy.isDead) {
+          const earned = this.addScore(ENEMY_SCORE[enemy.enemyType])
+          this.spawnScorePopup(enemy.x, enemy.y, earned)
+          this.enemiesDefeated++
+        }
         hitAny = true
       }
     }
@@ -272,14 +318,28 @@ export class GameScene extends Phaser.Scene {
       this.comboCount++
       this.comboTimer = this.COMBO_WINDOW
       this.hud.showCombo(this.comboCount)
-      this.cameras.main.shake(80, 0.003)
     }
   }
 
-  private addScore(points: number) {
+  private addScore(points: number): number {
     const mult = Math.max(1, Math.floor(this.comboCount / 2))
-    this.score += points * mult
+    const earned = points * mult
+    this.score += earned
     this.hud.updateScore(this.score)
+    return earned
+  }
+
+  private spawnScorePopup(x: number, y: number, points: number) {
+    const txt = this.add.text(x, y - 20, `+${points}`, {
+      fontSize: '20px', color: '#ffffaa',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 3,
+    }).setDepth(150).setOrigin(0.5)
+    this.tweens.add({
+      targets: txt, y: y - 90, alpha: 0,
+      duration: 1100, ease: 'Power2',
+      onComplete: () => txt.destroy(),
+    })
   }
 
   private spawnHitParticles(x: number, y: number) {
@@ -349,8 +409,13 @@ export class GameScene extends Phaser.Scene {
       ? 1
       : enemy.damageToPlayer
 
-    if (this.player.isBlocking) { sound.block() }
-    else { sound.playerHit(); this.player.playHitAnim() }
+    if (this.player.isBlocking) {
+      sound.block()
+    } else {
+      sound.playerHit()
+      this.player.playHitAnim()
+      this.cameras.main.shake(130, 0.0035)
+    }
 
     this.playerHP = Math.max(0, this.playerHP - dmg)
     this.hud.updatePlayerHP(this.playerHP, this.playerMaxHP)
@@ -398,6 +463,8 @@ export class GameScene extends Phaser.Scene {
     const enemy = new Enemy(this, x, y, type)
     enemy.wandRef   = this.wand
     enemy.playerRef = this.player
+    enemy.setAlpha(0)
+    this.tweens.add({ targets: enemy, alpha: 1, duration: 220 })
     this.enemies.push(enemy)
   }
 
@@ -423,33 +490,38 @@ export class GameScene extends Phaser.Scene {
     const { width, height } = this.scale
     const container = this.add.container(0, 0)
 
-    const bg = this.add.rectangle(width / 2, height / 2, 420, 280, 0x000000, 0.85)
-      .setStrokeStyle(2, 0x4488ff)
-    const title = this.add.text(width / 2, height / 2 - 80, 'PAUSA', {
-      fontSize: '42px', color: '#ffffff', fontFamily: 'monospace', stroke: '#000', strokeThickness: 4,
+    const bg = this.add.rectangle(width / 2, height / 2, 520, 340, 0x000000, 0.92)
+      .setStrokeStyle(4, 0xf3c204)
+
+    const title = this.add.text(width / 2, height / 2 - 110, 'PAUSA', {
+      fontSize: '52px', color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 8,
     }).setOrigin(0.5)
 
     const makeBtn = (label: string, y: number, cb: () => void) => {
       const txt = this.add.text(width / 2, y, label, {
-        fontSize: '22px', color: '#ffdd00', fontFamily: 'monospace', stroke: '#000', strokeThickness: 3,
+        fontSize: '24px', color: '#ffffff',
+        fontFamily: '"Press Start 2P", monospace',
+        stroke: '#000000', strokeThickness: 5,
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       txt.on('pointerdown', cb)
-      txt.on('pointerover', () => txt.setColor('#ffffff'))
-      txt.on('pointerout',  () => txt.setColor('#ffdd00'))
+      txt.on('pointerover', () => txt.setColor('#f3c204'))
+      txt.on('pointerout',  () => txt.setColor('#ffffff'))
       return txt
     }
 
-    const resumeBtn = makeBtn('[ CONTINUAR ]', height / 2 - 10, () => this.togglePause())
-    const muteBtn   = makeBtn('[ MUTE (M) ]',  height / 2 + 45, () => {
+    const resumeBtn = makeBtn('CONTINUAR', height / 2 - 20, () => this.togglePause())
+    const muteBtn   = makeBtn('MUTE (M)',  height / 2 + 50, () => {
       const m = sound.toggleMute(); this.hud.showMuteStatus(m)
     })
-    const quitBtn   = makeBtn('[ SAIR ]',       height / 2 + 95, () => {
+    const quitBtn   = makeBtn('SAIR',      height / 2 + 115, () => {
       this.cameras.main.fadeOut(300, 0, 0, 0)
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('SelectScene'))
     })
 
     container.add([bg, title, resumeBtn, muteBtn, quitBtn])
-    container.setDepth(300)
+    container.setDepth(3000)
     return container
   }
 
@@ -458,6 +530,7 @@ export class GameScene extends Phaser.Scene {
   private gameOver() {
     if (this.isGameOver) return
     this.isGameOver = true
+    sound.stopBgMusic()
     sound.gameOver()
     this.saveHighScore()
 
@@ -473,10 +546,13 @@ export class GameScene extends Phaser.Scene {
 
   private showVictory() {
     this.isGameOver = true
+    sound.stopBgMusic()
     sound.victory()
     this.saveHighScore()
 
     this.registry.set('youWinScore', this.score)
+    this.registry.set('youWinKills', this.enemiesDefeated)
+    this.registry.set('youWinTime',  this.gameTimerMs)
 
     this.cameras.main.fadeOut(400, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () =>

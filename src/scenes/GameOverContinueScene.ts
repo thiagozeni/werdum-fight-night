@@ -19,8 +19,8 @@ export class GameOverContinueScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(400, 0, 0, 0)
 
-    // Fundo sem crowd
-    this.add.image(width / 2, height / 2, 'sem-crowd').setDisplaySize(width, height).setDepth(0)
+    // Fundo
+    this.add.image(width / 2, height / 2, 'select-player-bg').setDisplaySize(width, height).setDepth(0)
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(1)
 
     // GAME OVER
@@ -34,24 +34,24 @@ export class GameOverContinueScene extends Phaser.Scene {
     this.add.image(831, 146, 'good-guys-loose').setOrigin(0, 0).setDepth(2)
 
     // CONTINUE?
-    this.add.text(159, 648, 'CONTINUE?', {
-      fontSize: '80px', color: '#e4e4e4',
+    this.add.text(159, 628, 'CONTINUE?', {
+      fontSize: '60px', color: '#e4e4e4',
       fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 6,
+      stroke: '#000000', strokeThickness: 10,
     }).setOrigin(0, 0).setDepth(2)
 
     // YES
     this.yesText = this.add.text(324, 742, 'YES', {
-      fontSize: '55px', color: '#f3c204',
+      fontSize: '40px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 6,
+      stroke: '#000000', strokeThickness: 10,
     }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
 
     // NO
     this.noText = this.add.text(542, 742, 'NO', {
-      fontSize: '55px', color: '#e4e4e4',
+      fontSize: '40px', color: '#e4e4e4',
       fontFamily: '"Press Start 2P", monospace',
-      stroke: '#000000', strokeThickness: 6,
+      stroke: '#000000', strokeThickness: 10,
     }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
 
     // Cursor ">"

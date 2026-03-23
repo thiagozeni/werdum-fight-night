@@ -15,7 +15,7 @@ export class ProtectedChar extends Phaser.GameObjects.Image {
     const frameH = this.height   // 768
     const t = Phaser.Math.Clamp((y - RING.top) / (RING.bottom - RING.top), 0, 1)
     const dispH = Phaser.Math.Linear(204, 420, t)
-    this.baseScaleY = (dispH / frameH) * 0.797
+    this.baseScaleY = (dispH / frameH) * 0.877
     this.baseScaleX = this.baseScaleY  // sem achatamento — mesma escala nos dois eixos
     this.setScale(this.baseScaleX, this.baseScaleY)
 
@@ -33,6 +33,40 @@ export class ProtectedChar extends Phaser.GameObjects.Image {
 
     scene.add.existing(this as unknown as Phaser.GameObjects.GameObject)
     this.setDepth(y)
+
+    this.createDizzyStars()
+  }
+
+  private createDizzyStars() {
+    const headY   = this.y - this.displayHeight * 0.46 + 35  // topo da cabeça
+    const orbitX  = 28   // raio horizontal da órbita
+    const orbitY  = 10   // raio vertical (elipse de perspectiva)
+    const count   = 3
+    const depth   = this.depth + 1
+
+    const stars = Array.from({ length: count }, (_, i) => {
+      const star = this.scene.add.star(this.x, headY, 5, 4, 9, 0xffe500)
+        .setDepth(depth)
+      return star
+    })
+
+    let angle = 0
+    this.scene.time.addEvent({
+      delay: 16,
+      loop: true,
+      callback: () => {
+        angle += 0.045
+        stars.forEach((star, i) => {
+          const a = angle + (i / count) * Math.PI * 2
+          star.setPosition(
+            this.x + 110 + Math.cos(a) * orbitX,
+            headY       + Math.sin(a) * orbitY,
+          )
+          star.setAngle(star.angle + 4)  // gira no próprio eixo
+          star.setDepth(depth)
+        })
+      },
+    })
   }
 
   takeDamage(amount: number): boolean {

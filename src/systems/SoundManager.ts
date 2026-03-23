@@ -1,8 +1,26 @@
 /**
- * Gera sons 8-bit em tempo real via Web Audio API.
- * Sem arquivos de áudio — tudo sintetizado.
+ * SoundManager — efeitos de combate via WAVs reais (Deadly Kombat Library)
+ * Música de fundo e sons de UI mantidos como síntese Web Audio.
  */
 export class SoundManager {
+  // ── Phaser audio (efeitos de combate) ────────────────────────────────
+  private psm: Phaser.Sound.BaseSoundManager | null = null
+
+  /** Chamado uma vez em BootScene.create() após carregar todos os assets. */
+  init(scene: Phaser.Scene) {
+    this.psm = scene.sound
+  }
+
+  private pick(keys: string[]): string {
+    return keys[Math.floor(Math.random() * keys.length)]
+  }
+
+  private sfx(keys: string[], volume = 0.72) {
+    if (this.muted || !this.psm) return
+    try { this.psm.play(this.pick(keys), { volume }) } catch (_) { /* sem crash */ }
+  }
+
+  // ── Web Audio (síntese — música e UI) ────────────────────────────────
   private ctx: AudioContext | null = null
   private muted = false
 
@@ -13,8 +31,15 @@ export class SoundManager {
     return this.ctx
   }
 
-  setMuted(v: boolean) { this.muted = v }
-  toggleMute() { this.muted = !this.muted; return this.muted }
+  setMuted(v: boolean) {
+    this.muted = v
+    if (this.bgMusic) (this.bgMusic as Phaser.Sound.WebAudioSound).setMute(v)
+  }
+  toggleMute() {
+    this.muted = !this.muted
+    if (this.bgMusic) (this.bgMusic as Phaser.Sound.WebAudioSound).setMute(this.muted)
+    return this.muted
+  }
 
   private tone(freq: number, type: OscillatorType, dur: number, vol = 0.25, delay = 0) {
     if (this.muted) return
@@ -31,53 +56,93 @@ export class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur)
       osc.start(ctx.currentTime + delay)
       osc.stop(ctx.currentTime + delay + dur + 0.05)
-    } catch (_) { /* autoplay bloqueado — sem crash */ }
-  }
-
-  private noise(dur: number, cutoff: number, vol = 0.3) {
-    if (this.muted) return
-    try {
-      const ctx = this.getCtx()
-      const sr = ctx.sampleRate
-      const buf = ctx.createBuffer(1, Math.ceil(sr * dur), sr)
-      const data = buf.getChannelData(0)
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
-      const src = ctx.createBufferSource()
-      src.buffer = buf
-      const filter = ctx.createBiquadFilter()
-      filter.type = 'bandpass'
-      filter.frequency.value = cutoff
-      filter.Q.value = 1.5
-      const gain = ctx.createGain()
-      gain.gain.setValueAtTime(vol, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
-      src.connect(filter)
-      filter.connect(gain)
-      gain.connect(ctx.destination)
-      src.start()
     } catch (_) { /* sem crash */ }
   }
 
-  // ── Sons do jogo ─────────────────────────────────────────
+  // ── Sons de combate (free-sfx — OpenGameArt CC0) ─────────────────────
 
-  punch()        { this.noise(0.07, 1400, 0.45) }
-  kick()         { this.noise(0.10, 450, 0.55) }
-  hitEnemy()     { this.noise(0.05, 1000, 0.35) }
-  block()        { this.noise(0.08, 600, 0.3) }
+  /** Whoosh de soco — curtíssimo (0.19–0.28s) */
+  punch() {
+    this.sfx(['sfx-punch-1', 'sfx-punch-2', 'sfx-punch-3', 'sfx-punch-4'])
+  }
 
+  /** Whoosh de chute — levemente mais longo (0.33–0.38s) */
+  kick() {
+    this.sfx(['sfx-kick-1', 'sfx-kick-2', 'sfx-kick-3', 'sfx-kick-4'])
+  }
+
+  /** Impacto leve ao acertar inimigo — sorteia entre 18 variações */
+  hitEnemy() {
+    this.sfx([
+      'sfx-impact-01','sfx-impact-02','sfx-impact-03','sfx-impact-04','sfx-impact-05',
+      'sfx-impact-06','sfx-impact-07','sfx-impact-08','sfx-impact-09','sfx-impact-10',
+      'sfx-impact-11','sfx-impact-12','sfx-impact-13','sfx-impact-14','sfx-impact-15',
+      'sfx-impact-16','sfx-impact-17','sfx-impact-18',
+    ])
+  }
+
+  /** Bloqueio — usa os 5 impacts mais curtos (< 0.40s) */
+  block() {
+    this.sfx(['sfx-impact-02','sfx-impact-06','sfx-impact-09','sfx-impact-12','sfx-impact-17'])
+  }
+
+  /** Jogador recebe golpe — impacto médio (0.60–0.79s) */
+  playerHit() {
+    this.sfx(['sfx-phit-1','sfx-phit-2','sfx-phit-3','sfx-phit-4','sfx-phit-5'])
+  }
+
+  /** Inimigo comum morre — impacto pesado (0.83–0.86s) */
   enemyDeath() {
-    this.tone(280, 'square', 0.06, 0.3)
-    this.tone(180, 'square', 0.1,  0.3, 0.07)
+    this.sfx(['sfx-edeath-1','sfx-edeath-2','sfx-edeath-3','sfx-edeath-4'])
   }
 
-  playerHit()    { this.noise(0.14, 320, 0.65) }
+  /** Boss morre — impacto mais longo (1.0–1.1s) + queda */
+  bossDeath() {
+    this.sfx(['sfx-bdeath-1','sfx-bdeath-2','sfx-bdeath-3'])
+    this.sfx(['sfx-fall'], 0.7)
+  }
+
+  /** Knockdown do jogador — impacto máximo (1.54s) + queda */
   playerKnockdown() {
-    this.tone(250, 'sawtooth', 0.05, 0.3)
-    this.tone(150, 'sawtooth', 0.12, 0.3, 0.06)
+    this.sfx(['sfx-ko'], 0.9)
+    this.sfx(['sfx-fall'], 0.6)
   }
 
-  jump()         { this.tone(500, 'square', 0.06, 0.15); this.tone(650, 'square', 0.06, 0.15, 0.05) }
-  land()         { this.noise(0.06, 300, 0.25) }
+  // ── Placeholders para ataques especiais futuros ───────────────────────
+
+  /** Soco especial com fogo */
+  firePunch(finisher = false) {
+    this.sfx([finisher ? 'sfx-fire-fin' : 'sfx-fire-punch'])
+  }
+
+  /** Soco com armadura metálica */
+  metalPunch(finisher = false) {
+    this.sfx([finisher ? 'sfx-metal-fin' : 'sfx-metal-punch'])
+  }
+
+  /** Golpe com taco de madeira */
+  woodBat() {
+    this.sfx(['sfx-wood-bat-1', 'sfx-wood-bat-2'])
+  }
+
+  /** Golpe com lâmina */
+  blade() {
+    this.sfx(['sfx-blade-1', 'sfx-blade-2'])
+  }
+
+  /** Acrobacia / esquiva aérea */
+  somersault() {
+    this.sfx(['sfx-somersault-1', 'sfx-somersault-2'])
+  }
+
+  // ── Sons de UI e eventos (síntese Web Audio) ──────────────────────────
+
+  jump()    { this.tone(500, 'square', 0.06, 0.15); this.tone(650, 'square', 0.06, 0.15, 0.05) }
+  land()    { /* sem uso ativo */ }
+  select()  { this.tone(500, 'square', 0.07, 0.2); this.tone(700, 'square', 0.07, 0.2, 0.08) }
+  hover()   { this.tone(400, 'square', 0.04, 0.1) }
+  pause()   { this.tone(300, 'triangle', 0.1, 0.2) }
+  unpause() { this.tone(400, 'triangle', 0.1, 0.2) }
 
   waveStart(isBoss = false) {
     if (isBoss) {
@@ -100,10 +165,29 @@ export class SoundManager {
       this.tone(f, 'square', 0.12, 0.22, i * 0.09))
   }
 
-  select()       { this.tone(500, 'square', 0.07, 0.2); this.tone(700, 'square', 0.07, 0.2, 0.08) }
-  hover()        { this.tone(400, 'square', 0.04, 0.1) }
-  pause()        { this.tone(300, 'triangle', 0.1, 0.2) }
-  unpause()      { this.tone(400, 'triangle', 0.1, 0.2) }
+  // ── Música de fundo (síntese Web Audio) ──────────────────────────────
+
+  private bgMusic: Phaser.Sound.BaseSound | null = null
+
+  /** Toca a música de intro (título e seleção de personagem) */
+  startIntroMusic() {
+    if (this.bgMusic?.isPlaying || !this.psm) return
+    this.bgMusic = this.psm.add('bgm-intro', { loop: true, volume: 0.35 })
+    this.bgMusic.play()
+  }
+
+  /** Troca para a música de gameplay (para a intro se estiver tocando) */
+  startBgMusic() {
+    if (!this.psm) return
+    this.stopBgMusic()
+    this.bgMusic = this.psm.add('bgm-gameplay', { loop: true, volume: 0.35 })
+    this.bgMusic.play()
+  }
+
+  stopBgMusic() {
+    this.bgMusic?.stop()
+    this.bgMusic = null
+  }
 }
 
 // Instância global
