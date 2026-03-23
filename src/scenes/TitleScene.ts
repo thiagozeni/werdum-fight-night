@@ -78,7 +78,7 @@ export class TitleScene extends Phaser.Scene {
     const orbitY = 12
     const count  = 5
     const stars  = Array.from({ length: count }, () =>
-      this.add.star(cx, cy, 5, 4, 9, 0xffe500).setDepth(5)
+      this.add.star(cx, cy, 5, 5, 10, 0xffe500).setDepth(5)
     )
     let angle = 0
     this.time.addEvent({
