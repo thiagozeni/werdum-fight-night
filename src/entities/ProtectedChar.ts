@@ -45,7 +45,7 @@ export class ProtectedChar extends Phaser.GameObjects.Image {
     const depth   = this.depth + 1
 
     const stars = Array.from({ length: count }, (_) => {
-      const star = this.scene.add.star(this.x, headY, 5, 4, 9, 0xffe500)
+      const star = this.scene.add.star(this.x, headY, 5, 3, 8, 0xffe500)
         .setDepth(depth)
       return star
     })
