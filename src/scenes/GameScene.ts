@@ -148,7 +148,9 @@ export class GameScene extends Phaser.Scene {
       M:   this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.M),
     }
 
-    // Eventos
+    // Eventos — off antes do on para evitar acúmulo ao reiniciar a cena (continue)
+    this.events.off('enemyAttackWand',   this.onEnemyAttackWand,   this)
+    this.events.off('enemyAttackPlayer', this.onEnemyAttackPlayer, this)
     this.events.on('enemyAttackWand',   this.onEnemyAttackWand,   this)
     this.events.on('enemyAttackPlayer', this.onEnemyAttackPlayer, this)
 
