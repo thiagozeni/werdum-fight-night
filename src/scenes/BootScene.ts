@@ -243,16 +243,17 @@ export class BootScene extends Phaser.Scene {
     gfx.generateTexture('spark', 8, 8)
     gfx.destroy()
 
-    // Remove o overlay de loading com fade
-    const overlay = document.getElementById('loader-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 500)
+    // Mostra botão JOGAR — o overlay some e o jogo inicia após clique do usuário
+    const showPlay = (window as unknown as Record<string, unknown>)['showPlayButton'] as ((cb: () => void) => void) | undefined
+    if (showPlay) {
+      showPlay(() => {
+        this.cameras.main.fadeIn(300, 0, 0, 0)
+        this.cameras.main.once('camerafadeincomplete', () => this.scene.start('TitleScene'))
+      })
+    } else {
+      // Fallback: sem overlay, inicia direto
+      this.cameras.main.fadeIn(300, 0, 0, 0)
+      this.cameras.main.once('camerafadeincomplete', () => this.scene.start('TitleScene'))
     }
-
-    this.cameras.main.fadeIn(300, 0, 0, 0)
-    this.cameras.main.once('camerafadeincomplete', () => {
-      this.scene.start('TitleScene')
-    })
   }
 }

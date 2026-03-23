@@ -56,73 +56,100 @@
       transition: opacity 0.5s ease;
     ">
       <video autoplay loop muted playsinline style="
-        width: 66%; height: 66%; object-fit: contain;
+        width: 60%; height: 60%; object-fit: contain;
       ">
         <source src="videos/loader.m4v" type="video/mp4">
       </video>
-      <div style="width: 66%; display: flex; flex-direction: column; gap: 10px;">
-        <div style="
-          width: 100%; height: 10px;
-          background: rgba(0, 180, 255, 0.12);
-          border-radius: 10px;
-          border: 1px solid rgba(0, 180, 255, 0.35);
-          box-shadow: 0 0 10px rgba(0, 180, 255, 0.2);
-          overflow: hidden;
-        ">
-          <div id="loader-bar" style="
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #00aaff, #00eeff);
+
+      <!-- Área fixa abaixo do vídeo — barra e botão ocupam o mesmo espaço -->
+      <div style="width: 60%; height: 52px; position: relative; display: flex; align-items: center;">
+
+        <!-- Barra de progresso -->
+        <div id="loader-progress" style="position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+          <div style="
+            width: 100%; height: 10px;
+            background: rgba(0, 180, 255, 0.12);
             border-radius: 10px;
-            box-shadow: 0 0 12px #00ccff, 0 0 28px #0088ff;
-            transition: width 0.15s ease;
-          "></div>
+            border: 1px solid rgba(0, 180, 255, 0.35);
+            box-shadow: 0 0 10px rgba(0, 180, 255, 0.2);
+            overflow: hidden;
+          ">
+            <div id="loader-bar" style="
+              width: 0%; height: 100%;
+              background: linear-gradient(90deg, #00aaff, #00eeff);
+              border-radius: 10px;
+              box-shadow: 0 0 12px #00ccff, 0 0 28px #0088ff;
+              transition: width 0.15s ease;
+            "></div>
+          </div>
+          <div id="loader-pct" style="
+            text-align: right; font-family: monospace; font-size: 12px;
+            color: rgba(0, 200, 255, 0.7); letter-spacing: 2px;
+            text-shadow: 0 0 8px #00ccff;
+          ">0%</div>
         </div>
-        <div id="loader-pct" style="
-          text-align: right;
-          font-family: monospace;
-          font-size: 12px;
-          color: rgba(0, 200, 255, 0.7);
-          letter-spacing: 2px;
-          text-shadow: 0 0 8px #00ccff;
-        ">0%</div>
+
+        <!-- Botão JOGAR — aparece após 100%, mesmo espaço -->
+        <div id="loader-play" style="
+          position: absolute; inset: 0;
+          display: none; align-items: center; justify-content: center;
+          cursor: pointer;
+        ">
+          <div style="
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(20px, 3.2vw, 40px);
+            color: #00eeff;
+            text-shadow: 0 0 16px #00ccff, 0 0 40px #0088ff, 0 0 80px #0055ff;
+            letter-spacing: 6px;
+            animation: neon-pulse 1.2s ease-in-out infinite alternate;
+          ">JOGAR</div>
+        </div>
+
       </div>
     </div>
+
+    <style>
+      @keyframes neon-pulse {
+        from { text-shadow: 0 0 10px #00ccff, 0 0 30px #0088ff, 0 0 60px #0055ff; }
+        to   { text-shadow: 0 0 20px #00eeff, 0 0 50px #00aaff, 0 0 100px #0077ff; }
+      }
+    </style>
     <div id="game-wrap"></div>
     <div id="rotate-msg">
       <div style="font-size:48px">&#8635;</div>
       <p>Gire o dispositivo<br>para jogar</p>
     </div>
     <script>
-      var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
+      // Chamado pelo BootScene quando o carregamento termina
+      window.showPlayButton = function(onStart) {
+        var progress = document.getElementById('loader-progress')
+        var playBtn  = document.getElementById('loader-play')
+        var overlay  = document.getElementById('loader-overlay')
 
-      function requestFS() {
-        if (!isMobile) return
-        if (document.fullscreenElement || document.webkitFullscreenElement) return
-        const el = document.documentElement
-        try {
-          if (el.requestFullscreen)            el.requestFullscreen({ navigationUI: 'hide' })
-          else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen()
-          else if (el.mozRequestFullScreen)    el.mozRequestFullScreen()
-        } catch(e) {}
-        window.scrollTo(0, 1)
-      }
+        if (progress) progress.style.display = 'none'
+        if (playBtn)  playBtn.style.display = 'flex'
 
-      if (isMobile) {
-        ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev =>
-          document.addEventListener(ev, requestFS)
-        )
+        function start() {
+          overlay.removeEventListener('click',      start)
+          overlay.removeEventListener('touchstart', start)
 
-        document.addEventListener('fullscreenchange', () => {
-          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            setTimeout(requestFS, 300)
+          // Fullscreen apenas no mobile
+          var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
+          if (isMobile) {
+            var el = document.documentElement
+            try {
+              if      (el.requestFullscreen)            el.requestFullscreen({ navigationUI: 'hide' })
+              else if (el.webkitRequestFullscreen)      el.webkitRequestFullscreen()
+              else if (el.mozRequestFullScreen)         el.mozRequestFullScreen()
+            } catch(e) {}
           }
-        })
-        document.addEventListener('webkitfullscreenchange', () => {
-          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            setTimeout(requestFS, 300)
-          }
-        })
+
+          overlay.style.opacity = '0'
+          setTimeout(function() { overlay.remove(); onStart() }, 500)
+        }
+
+        overlay.addEventListener('click',      start)
+        overlay.addEventListener('touchstart', start)
       }
     </script>
     <script type="module" src="/src/main.ts"></script>
