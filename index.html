@@ -46,7 +46,10 @@
       <p>Gire o dispositivo<br>para jogar</p>
     </div>
     <script>
+      var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
+
       function requestFS() {
+        if (!isMobile) return
         if (document.fullscreenElement || document.webkitFullscreenElement) return
         const el = document.documentElement
         try {
@@ -57,22 +60,22 @@
         window.scrollTo(0, 1)
       }
 
-      // Tenta em qualquer interação do usuário (necessário pela política dos browsers)
-      ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev =>
-        document.addEventListener(ev, requestFS)
-      )
+      if (isMobile) {
+        ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev =>
+          document.addEventListener(ev, requestFS)
+        )
 
-      // Re-entra em fullscreen se o usuário sair (ex: swipe para cima no iOS)
-      document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-          setTimeout(requestFS, 300)
-        }
-      })
-      document.addEventListener('webkitfullscreenchange', () => {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-          setTimeout(requestFS, 300)
-        }
-      })
+        document.addEventListener('fullscreenchange', () => {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            setTimeout(requestFS, 300)
+          }
+        })
+        document.addEventListener('webkitfullscreenchange', () => {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            setTimeout(requestFS, 300)
+          }
+        })
+      }
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
