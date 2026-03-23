@@ -30,8 +30,8 @@ export class VirtualJoystick {
     this.scene = scene
     this.isTouch = scene.sys.game.device.input.touch
 
-    this.bX = 60
-    this.bY = 737
+    this.bX = 160
+    this.bY = 837
 
     if (!this.isTouch) return
 
