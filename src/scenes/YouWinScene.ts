@@ -132,6 +132,15 @@ export class YouWinScene extends Phaser.Scene {
     input.style.zIndex      = '100'
     input.style.letterSpacing = '2px'
     document.body.appendChild(input)
+
+    // Libera teclado do Phaser enquanto o input estiver focado
+    input.addEventListener('focus', () => {
+      this.input.keyboard!.disableGlobalCapture()
+    })
+    input.addEventListener('blur', () => {
+      this.input.keyboard!.enableGlobalCapture()
+    })
+
     input.focus()
 
     // Força uppercase enquanto digita
@@ -156,6 +165,8 @@ export class YouWinScene extends Phaser.Scene {
     }
   }
 
+  private statusText: Phaser.GameObjects.Text | null = null
+
   private async submit() {
     if (this.navigating) return
     this.navigating = true
@@ -164,13 +175,34 @@ export class YouWinScene extends Phaser.Scene {
     const score     = this.registry.get('youWinScore')   as number ?? 0
     const timeMs    = this.registry.get('youWinTime')    as number ?? 0
     const continues = this.registry.get('continueCount') as number ?? 0
+    const character = (this.registry.get('selectedChar') as string) ?? 'werdum'
 
     this.removeNameInput()
     sound.select()
 
-    // Salva no Supabase (não bloqueia a transição em caso de erro)
-    await saveScore({ player_name: name, continues, time_ms: timeMs, score })
-      .catch(() => {/* silencia erros de rede */})
+    // Feedback de salvando
+    this.statusText = this.add.text(129, 690, 'SALVANDO...', {
+      fontSize: '22px', color: '#aaaaaa',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 3,
+    }).setDepth(5)
+
+    let saveOk = false
+    try {
+      await saveScore({ player_name: name, character, continues: Math.floor(continues), time_ms: Math.floor(timeMs), score: Math.floor(score) })
+      saveOk = true
+    } catch (e) {
+      console.error('[Leaderboard] Erro ao salvar:', e)
+      this.statusText.setText('ERRO AO SALVAR: ' + (e instanceof Error ? e.message : String(e)))
+      this.statusText.setColor('#ff4444')
+      // Aguarda 3s e vai mesmo assim
+      await new Promise(r => this.time.delayedCall(3000, r))
+    }
+
+    if (saveOk) {
+      this.statusText.setText('SALVO!').setColor('#44ff88')
+      await new Promise(r => this.time.delayedCall(400, r))
+    }
 
     // Passa o nome para TopTenScene destacar a entrada
     this.registry.set('lastEntryName', name)

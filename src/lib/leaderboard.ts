@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 export interface ScoreEntry {
   id?: string
   player_name: string
+  character: string
   continues: number
   time_ms: number
   score: number
@@ -10,7 +11,8 @@ export interface ScoreEntry {
 }
 
 export async function saveScore(entry: ScoreEntry): Promise<void> {
-  await supabase.from('scores').insert(entry)
+  const { error } = await supabase.from('scores').insert(entry)
+  if (error) throw new Error(error.message)
 }
 
 export async function getTopTen(): Promise<ScoreEntry[]> {

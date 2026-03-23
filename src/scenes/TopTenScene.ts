@@ -34,9 +34,10 @@ export class TopTenScene extends Phaser.Scene {
     }
     this.add.text(100,  195, '#',         headerStyle).setDepth(2)
     this.add.text(180,  195, 'NOME',      headerStyle).setDepth(2)
-    this.add.text(740,  195, 'CONT.',     headerStyle).setDepth(2)
-    this.add.text(980,  195, 'TEMPO',     headerStyle).setDepth(2)
-    this.add.text(1300, 195, 'SCORE',     headerStyle).setDepth(2)
+    this.add.text(640,  195, 'PERSONAGEM', headerStyle).setDepth(2)
+    this.add.text(1040, 195, 'CONT.',     headerStyle).setDepth(2)
+    this.add.text(1240, 195, 'TEMPO',     headerStyle).setDepth(2)
+    this.add.text(1530, 195, 'SCORE',     headerStyle).setDepth(2)
 
     // Linha divisória
     this.add.rectangle(960, 230, 1720, 2, 0xf3c204, 0.5).setDepth(2)
@@ -86,11 +87,13 @@ export class TopTenScene extends Phaser.Scene {
         this.add.rectangle(960, y + 18, 1720, 58, 0xf3c204, 0.12).setDepth(2)
       }
 
+      const charName = (entry.character ?? 'werdum').toUpperCase()
       this.add.text(100,  y, medal,                           style).setDepth(2)
       this.add.text(180,  y, entry.player_name,               style).setDepth(2)
-      this.add.text(740,  y, String(entry.continues),         style).setDepth(2)
-      this.add.text(980,  y, `${mm}:${ss}`,                   style).setDepth(2)
-      this.add.text(1300, y, entry.score.toLocaleString(),    style).setDepth(2)
+      this.add.text(640,  y, charName,                        style).setDepth(2)
+      this.add.text(1040, y, String(entry.continues),         style).setDepth(2)
+      this.add.text(1240, y, `${mm}:${ss}`,                   style).setDepth(2)
+      this.add.text(1530, y, entry.score.toLocaleString(),    style).setDepth(2)
     })
 
     if (rows.length === 0) {
