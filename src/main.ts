@@ -26,4 +26,4 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 }
 
-document.fonts.ready.then(() => new Phaser.Game(config))
+document.fonts.load('16px "Press Start 2P"').then(() => new Phaser.Game(config))
