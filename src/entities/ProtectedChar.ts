@@ -38,10 +38,10 @@ export class ProtectedChar extends Phaser.GameObjects.Image {
   }
 
   private createDizzyStars() {
-    const headY   = this.y - this.displayHeight * 0.46 + 35  // topo da cabeça
+    const headY   = this.y - this.displayHeight * 0.46 + 45  // topo da cabeça
     const orbitX  = 28   // raio horizontal da órbita
     const orbitY  = 10   // raio vertical (elipse de perspectiva)
-    const count   = 3
+    const count   = 5
     const depth   = this.depth + 1
 
     const stars = Array.from({ length: count }, (_) => {
