@@ -74,7 +74,7 @@ export class YouWinScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(2)
 
     // PRESS START (pisca)
-    const startText = this.add.text(502, 742, 'PRESS START', {
+    const startText = this.add.text(502, 722, 'PRESS START', {
       fontSize: '44px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
