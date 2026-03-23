@@ -62,6 +62,14 @@ export class GameOverContinueScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(2)
 
     // Inputs
+    this.input.keyboard!.off('keydown-LEFT')
+    this.input.keyboard!.off('keydown-RIGHT')
+    this.input.keyboard!.off('keydown-A')
+    this.input.keyboard!.off('keydown-D')
+    this.input.keyboard!.off('keydown-Y')
+    this.input.keyboard!.off('keydown-N')
+    this.input.keyboard!.off('keydown-SPACE')
+    this.input.keyboard!.off('keydown-ENTER')
     this.input.keyboard!.on('keydown-LEFT',  () => this.moveCursor(0))
     this.input.keyboard!.on('keydown-RIGHT', () => this.moveCursor(1))
     this.input.keyboard!.on('keydown-A',     () => this.moveCursor(0))

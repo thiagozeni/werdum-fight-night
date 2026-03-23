@@ -283,15 +283,17 @@ export class HUD {
     this.playerHPPct.setText(`${Math.ceil(r * 100)}%`)
   }
 
-  updateWandHP(current: number, max: number) {
+  updateWandHP(current: number, max: number, flash = true) {
     const r = Math.max(0, current / max)
     const w = Math.round(WAND_FILL_MAX_W * r)
     this.wandBar.setSize(w, WAND_FILL_H)
     const color = r > 0.5 ? 0x22cc44 : r > 0.25 ? 0xddaa00 : 0xdd2222
     this.wandBar.setFillStyle(color)
     this.wandHPPct.setText(`${Math.ceil(r * 100)}%`)
-    this.damageFlash.setAlpha(0.3)
-    this.scene.tweens.add({ targets: this.damageFlash, alpha: 0, duration: 350 })
+    if (flash) {
+      this.damageFlash.setAlpha(0.3)
+      this.scene.tweens.add({ targets: this.damageFlash, alpha: 0, duration: 350 })
+    }
     if (current <= 0) this.setWandKO()
   }
 

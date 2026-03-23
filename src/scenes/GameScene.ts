@@ -127,7 +127,7 @@ export class GameScene extends Phaser.Scene {
     this.hud = new HUD(this)
     this.hud.setPlayerName(selectedChar)
     this.hud.updatePlayerHP(this.playerHP, this.playerMaxHP)
-    this.hud.updateWandHP(this.wand.hp, this.wand.maxHp)
+    this.hud.updateWandHP(this.wand.hp, this.wand.maxHp, false)
     this.hud.updateScore(0)
     this.hud.updateEnemyCount(0)
 
@@ -155,6 +155,8 @@ export class GameScene extends Phaser.Scene {
     this.events.on('enemyAttackWand',   this.onEnemyAttackWand,   this)
     this.events.on('enemyAttackPlayer', this.onEnemyAttackPlayer, this)
 
+    this.input.keyboard!.off('keydown-ESC')
+    this.input.keyboard!.off('keydown-M')
     this.input.keyboard!.on('keydown-ESC', () => this.togglePause())
     this.input.keyboard!.on('keydown-M',   () => {
       const muted = sound.toggleMute()
@@ -163,14 +165,14 @@ export class GameScene extends Phaser.Scene {
 
     // Suporte a "continue" — retoma da wave em que o jogador perdeu
     const continueWave = this.registry.get('continueFromWave') as number | undefined
-    if (continueWave && continueWave > 1) {
-      this.currentWave = continueWave - 1
+    if (continueWave) {
+      if (continueWave > 1) this.currentWave = continueWave - 1
       this.registry.remove('continueFromWave')
     }
 
     sound.startBgMusic()
     this.cameras.main.fadeIn(500, 0, 0, 0)
-    this.time.delayedCall(1200, () => this.startNextWave())
+    this.time.delayedCall(1200, () => { if (!this.isGameOver) this.startNextWave() })
   }
 
   update(_time: number, delta: number) {
@@ -242,7 +244,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (!this.waveActive && this.waveEndTimer > 0) {
       this.waveEndTimer -= delta
-      if (this.waveEndTimer <= 0) this.startNextWave()
+      if (this.waveEndTimer <= 0 && !this.isGameOver) this.startNextWave()
     }
 
     // Colisão com o wand — impede personagens de atravessá-lo

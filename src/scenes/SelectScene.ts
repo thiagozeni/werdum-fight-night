@@ -128,6 +128,12 @@ export class SelectScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(4)
 
     // Controles
+    this.input.keyboard!.off('keydown-LEFT')
+    this.input.keyboard!.off('keydown-RIGHT')
+    this.input.keyboard!.off('keydown-A')
+    this.input.keyboard!.off('keydown-D')
+    this.input.keyboard!.off('keydown-SPACE')
+    this.input.keyboard!.off('keydown-ENTER')
     this.input.keyboard!.on('keydown-LEFT',  () => this.selectChar((this.selectedIndex - 1 + CHARACTERS.length) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-RIGHT', () => this.selectChar((this.selectedIndex + 1) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-A',     () => this.selectChar((this.selectedIndex - 1 + CHARACTERS.length) % CHARACTERS.length))
