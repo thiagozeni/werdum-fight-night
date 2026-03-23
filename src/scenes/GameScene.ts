@@ -416,6 +416,7 @@ export class GameScene extends Phaser.Scene {
 
     if (this.player.isBlocking) {
       sound.block()
+      enemy.stagger()
     } else {
       sound.playerHit()
       this.player.playHitAnim()

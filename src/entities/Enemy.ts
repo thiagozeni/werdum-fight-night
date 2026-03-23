@@ -55,7 +55,7 @@ const BOSS_KEYS: Partial<Record<EnemyType, string>> = {
   boss_son: 'popo-son', boss_coach: 'popo-coach', boss_popo: 'popo',
 }
 
-type AIState = 'approach' | 'waitBeforeAttack' | 'chasePlayer' | 'knockdown' | 'recover' | 'dead'
+type AIState = 'approach' | 'waitBeforeAttack' | 'chasePlayer' | 'knockdown' | 'recover' | 'staggered' | 'dead'
 
 interface Positionable { x: number; y: number }
 
@@ -81,6 +81,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
   private waitTimer = 0
   private attackCooldown = 0
   private knockdownTimer = 0
+  private staggerTimer = 0
   private inPhase2 = false
 
   public wandRef!: Positionable
@@ -212,6 +213,21 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     }
   }
 
+  /** Bloqueio do player interrompe o ataque e empurra o inimigo para trás */
+  stagger() {
+    if (this.isDead || this.aiState === 'knockdown' || this.aiState === 'staggered') return
+    this.aiState = 'staggered'
+    this.staggerTimer = this.isBoss ? 400 : 650
+    this.attackCooldown = this.isBoss ? 1200 : 1800
+    this.animLocked = false
+    this.playHitAnim()
+    // Pequeno knockback — empurra para longe do player
+    const dx = this.x - this.playerRef.x
+    const pushDist = this.isBoss ? 40 : 70
+    const dir = dx >= 0 ? 1 : -1
+    this.x = Phaser.Math.Clamp(this.x + dir * pushDist, RING.leftAt(this.y), RING.rightAt(this.y))
+  }
+
   /** Chamado pelo GameScene para separar inimigos sobrepostos */
   applySeparationForce(others: Enemy[]) {
     for (const other of others) {
@@ -317,6 +333,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
       case 'waitBeforeAttack': this.updateWait(delta); break
       case 'chasePlayer': this.updateChasePlayer(delta); break
       case 'knockdown':   this.updateKnockdown(delta); break
+      case 'staggered':   this.updateStagger(delta);   break
       case 'recover':
         this.setAlpha(1)
         this.animLocked = false
@@ -399,6 +416,14 @@ export class Enemy extends Phaser.GameObjects.Sprite {
   private updateKnockdown(delta: number) {
     this.knockdownTimer -= delta
     if (this.knockdownTimer <= 0) this.aiState = 'recover'
+  }
+
+  private updateStagger(delta: number) {
+    this.staggerTimer -= delta
+    if (this.staggerTimer <= 0) {
+      this.animLocked = false
+      this.aiState = 'approach'
+    }
   }
 
   private attackPlayer() {
