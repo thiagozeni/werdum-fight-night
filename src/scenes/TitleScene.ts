@@ -3,6 +3,7 @@ import { sound } from '../systems/SoundManager'
 
 export class TitleScene extends Phaser.Scene {
   private navigating = false
+  private bgVideo: Phaser.GameObjects.Video | null = null
 
   constructor() {
     super({ key: 'TitleScene' })
@@ -13,8 +14,11 @@ export class TitleScene extends Phaser.Scene {
     this.navigating = false
     sound.startIntroMusic()
 
-    // Fundo completo com logo, bad-guys e good-guys incorporados
-    this.add.image(width / 2, height / 2, 'intro-bg').setDisplaySize(width, height).setDepth(0)
+    // Vídeo de fundo em loop
+    this.bgVideo = this.add.video(width / 2, height / 2, undefined as unknown as string)
+    this.bgVideo.loadURL('videos/intro.mp4', true)
+    this.bgVideo.setDisplaySize(width, height).setDepth(0)
+    this.bgVideo.on('created', () => { this.bgVideo?.play(true) })
 
     // PRESS START (pisca)
     const pressStart = this.add.text(960, 630, 'PRESS START', {
@@ -60,6 +64,7 @@ export class TitleScene extends Phaser.Scene {
     if (this.navigating) return
     this.navigating = true
     sound.select()
+    this.bgVideo?.stop()
     this.cameras.main.fadeOut(400, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('HowToPlayScene'))
   }
