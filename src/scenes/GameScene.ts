@@ -131,6 +131,19 @@ export class GameScene extends Phaser.Scene {
     this.hud.updateScore(0)
     this.hud.updateEnemyCount(0)
 
+    // Botão PAUSE mobile — visível apenas em touch, abaixo do portrait do Wand
+    if (this.sys.game.device.input.touch) {
+      const pauseBtn = this.add.text(1784, 242, 'PAUSE', {
+        fontSize: '28px',
+        color: '#aaaaaa',
+        fontFamily: '"Press Start 2P", monospace',
+        stroke: '#000000',
+        strokeThickness: 4,
+      }).setOrigin(0.5, 0).setDepth(110).setScrollFactor(0).setAlpha(0.6)
+        .setInteractive({ useHandCursor: true })
+      pauseBtn.on('pointerdown', () => this.togglePause())
+    }
+
     // Virtual joystick (mobile)
     this.joystick = new VirtualJoystick(this)
 
