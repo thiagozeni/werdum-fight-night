@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     this.gameTimerMs      = 0
     this.enemiesDefeated  = 0
     this.attackCooldown   = 0
+    this.currentWave      = 0
     this.waveActive       = false
     this.waveEndTimer     = 0
     this.spawnQueue       = []
