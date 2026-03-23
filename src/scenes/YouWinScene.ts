@@ -1,8 +1,10 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
+import { saveScore } from '../lib/leaderboard'
 
 export class YouWinScene extends Phaser.Scene {
   private navigating = false
+  private nameInput: HTMLInputElement | null = null
 
   constructor() {
     super({ key: 'YouWinScene' })
@@ -35,9 +37,10 @@ export class YouWinScene extends Phaser.Scene {
     this.add.image(878, 299, 'good-guys-win').setOrigin(0, 0).setDepth(2)
 
     // Stats da partida
-    const score  = this.registry.get('youWinScore')  as number ?? 0
-    const kills  = this.registry.get('youWinKills')  as number ?? 0
-    const timeMs = this.registry.get('youWinTime')   as number ?? 0
+    const score     = this.registry.get('youWinScore')    as number ?? 0
+    const kills     = this.registry.get('youWinKills')    as number ?? 0
+    const timeMs    = this.registry.get('youWinTime')     as number ?? 0
+    const continues = this.registry.get('continueCount')  as number ?? 0
     const mm = String(Math.floor(timeMs / 60000)).padStart(2, '0')
     const ss = String(Math.floor((timeMs % 60000) / 1000)).padStart(2, '0')
 
@@ -49,32 +52,43 @@ export class YouWinScene extends Phaser.Scene {
     const labelStyle = { ...statStyle, color: '#f3c204' }
 
     const stats: [string, string][] = [
-      ['SCORE',   score.toLocaleString()],
-      ['INIMIGOS', String(kills)],
-      ['TEMPO',   `${mm}:${ss}`],
+      ['SCORE',     score.toLocaleString()],
+      ['INIMIGOS',  String(kills)],
+      ['TEMPO',     `${mm}:${ss}`],
+      ['CONTINUES', String(continues)],
     ]
     stats.forEach(([label, value], i) => {
-      const y = 340 + i * 90
+      const y = 340 + i * 72
       this.add.text(130, y, label, labelStyle).setOrigin(0, 0).setDepth(2)
       this.add.text(690, y, value, statStyle).setOrigin(1, 0).setDepth(2)
     })
 
-    // PLAY AGAIN?
-    this.add.text(129, 628, 'PLAY AGAIN?', {
+    // ENTER YOUR NAME
+    this.add.text(129, 628, 'ENTER YOUR NAME:', {
+      fontSize: '36px', color: '#e4e4e4',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 6,
+    }).setOrigin(0, 0).setDepth(2)
+
+    // Input HTML sobreposto
+    this.nameInput = this.createNameInput()
+
+    // PLAY AGAIN? label
+    this.add.text(129, 760, 'PLAY AGAIN?', {
       fontSize: '64px', color: '#e4e4e4',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
     }).setOrigin(0, 0).setDepth(2)
 
     // Cursor ">"
-    this.add.text(215, 742, '>', {
+    this.add.text(215, 873, '>', {
       fontSize: '35px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 5,
     }).setOrigin(0.5).setDepth(2)
 
     // PRESS START (pisca)
-    const startText = this.add.text(502, 742, 'PRESS START', {
+    const startText = this.add.text(502, 873, 'PRESS START', {
       fontSize: '44px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
@@ -85,25 +99,98 @@ export class YouWinScene extends Phaser.Scene {
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     })
 
-    startText.on('pointerdown', () => this.goToSelect())
+    startText.on('pointerdown', () => this.submit())
 
     this.time.delayedCall(1000, () => {
-      this.input.keyboard!.on('keydown-SPACE', () => this.goToSelect())
-      this.input.keyboard!.on('keydown-ENTER', () => this.goToSelect())
+      this.input.keyboard!.on('keydown-ENTER', () => this.submit())
     })
   }
 
-  private goToSelect() {
+  private createNameInput(): HTMLInputElement {
+    const canvas = this.game.canvas
+    const bounds  = canvas.getBoundingClientRect()
+    const scaleX  = bounds.width  / 1920
+    const scaleY  = bounds.height / 1080
+
+    const input = document.createElement('input')
+    input.type        = 'text'
+    input.maxLength   = 12
+    input.placeholder = 'AAA'
+    input.style.position    = 'fixed'
+    input.style.left        = `${bounds.left + 129 * scaleX}px`
+    input.style.top         = `${bounds.top  + 678 * scaleY}px`
+    input.style.width       = `${560 * scaleX}px`
+    input.style.height      = `${56 * scaleY}px`
+    input.style.fontSize    = `${28 * scaleY}px`
+    input.style.fontFamily  = '"Press Start 2P", monospace'
+    input.style.background  = 'rgba(0,0,0,0.7)'
+    input.style.color       = '#f3c204'
+    input.style.border      = '2px solid #f3c204'
+    input.style.outline     = 'none'
+    input.style.padding     = '4px 8px'
+    input.style.textTransform = 'uppercase'
+    input.style.zIndex      = '100'
+    input.style.letterSpacing = '2px'
+    document.body.appendChild(input)
+    input.focus()
+
+    // Força uppercase enquanto digita
+    input.addEventListener('input', () => {
+      const pos = input.selectionStart
+      input.value = input.value.toUpperCase()
+      input.setSelectionRange(pos, pos)
+    })
+
+    // Garante que ENTER no input chama submit
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); this.submit() }
+    })
+
+    return input
+  }
+
+  private removeNameInput() {
+    if (this.nameInput) {
+      this.nameInput.remove()
+      this.nameInput = null
+    }
+  }
+
+  private async submit() {
     if (this.navigating) return
     this.navigating = true
+
+    const name      = (this.nameInput?.value.trim() || 'AAA').toUpperCase().slice(0, 12)
+    const score     = this.registry.get('youWinScore')   as number ?? 0
+    const timeMs    = this.registry.get('youWinTime')    as number ?? 0
+    const continues = this.registry.get('continueCount') as number ?? 0
+
+    this.removeNameInput()
     sound.select()
+
+    // Salva no Supabase (não bloqueia a transição em caso de erro)
+    await saveScore({ player_name: name, continues, time_ms: timeMs, score })
+      .catch(() => {/* silencia erros de rede */})
+
+    // Passa o nome para TopTenScene destacar a entrada
+    this.registry.set('lastEntryName', name)
+    this.registry.set('lastEntryContinues', continues)
+    this.registry.set('lastEntryTime', timeMs)
+    this.registry.set('lastEntryScore', score)
+
     this.registry.remove('youWinScore')
     this.registry.remove('youWinKills')
     this.registry.remove('youWinTime')
     this.registry.remove('continueFromWave')
     this.registry.remove('gameOverWave')
     this.registry.remove('gameOverScore')
+    this.registry.remove('continueCount')
+
     this.cameras.main.fadeOut(400, 0, 0, 0)
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TitleScene'))
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TopTenScene'))
+  }
+
+  shutdown() {
+    this.removeNameInput()
   }
 }

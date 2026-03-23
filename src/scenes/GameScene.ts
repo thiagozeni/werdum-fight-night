@@ -100,6 +100,11 @@ export class GameScene extends Phaser.Scene {
     this.spawnQueue       = []
     this.spawnTimer       = 0
 
+    // Reseta continueCount apenas em partida nova (não continue)
+    if (!this.registry.get('continueFromWave')) {
+      this.registry.set('continueCount', 0)
+    }
+
     const selectedChar: string = this.registry.get('selectedChar') ?? 'werdum'
 
     // Fundo estático — cenário do jogo

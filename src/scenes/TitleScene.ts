@@ -52,6 +52,16 @@ export class TitleScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 5,
     }).setOrigin(0.5).setDepth(3)
 
+    // TOP 10
+    const top10 = this.add.text(960, 900, '🏆 TOP 10', {
+      fontSize: '30px', color: '#ffffff',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 5,
+    }).setOrigin(0.5).setDepth(3).setInteractive({ useHandCursor: true })
+    top10.on('pointerover',  () => top10.setColor('#f3c204'))
+    top10.on('pointerout',   () => top10.setColor('#ffffff'))
+    top10.on('pointerdown',  () => this.goToTopTen())
+
     // Créditos
     this.add.text(960, 979, 'CACHORRADAS ESTUDIOS', {
       fontSize: '24px', color: '#ffffff',
@@ -93,6 +103,15 @@ export class TitleScene extends Phaser.Scene {
         })
       },
     })
+  }
+
+  private goToTopTen() {
+    if (this.navigating) return
+    this.navigating = true
+    sound.select()
+    this.bgVideo?.stop()
+    this.cameras.main.fadeOut(400, 0, 0, 0)
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TopTenScene'))
   }
 
   private goToSelect() {

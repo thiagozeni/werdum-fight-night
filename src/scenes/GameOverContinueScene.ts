@@ -109,6 +109,8 @@ export class GameOverContinueScene extends Phaser.Scene {
     this.navigating = true
     sound.select()
     if (this.selectedIndex === 0) {
+      const prev = (this.registry.get('continueCount') as number) ?? 0
+      this.registry.set('continueCount', prev + 1)
       this.registry.set('continueFromWave', this.registry.get('gameOverWave'))
       this.cameras.main.fadeOut(300, 0, 0, 0)
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('GameScene'))
