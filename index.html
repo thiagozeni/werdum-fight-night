@@ -46,18 +46,33 @@
       <p>Gire o dispositivo<br>para jogar</p>
     </div>
     <script>
-      // Fullscreen no primeiro toque — tenta várias APIs
       function requestFS() {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return
         const el = document.documentElement
         try {
           if (el.requestFullscreen)            el.requestFullscreen({ navigationUI: 'hide' })
           else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen()
           else if (el.mozRequestFullScreen)    el.mozRequestFullScreen()
         } catch(e) {}
-        // Tenta também ocultar a barra do navegador via scroll
         window.scrollTo(0, 1)
       }
-      document.addEventListener('touchend', requestFS, { once: true })
+
+      // Tenta em qualquer interação do usuário (necessário pela política dos browsers)
+      ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev =>
+        document.addEventListener(ev, requestFS)
+      )
+
+      // Re-entra em fullscreen se o usuário sair (ex: swipe para cima no iOS)
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          setTimeout(requestFS, 300)
+        }
+      })
+      document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          setTimeout(requestFS, 300)
+        }
+      })
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
