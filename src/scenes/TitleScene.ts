@@ -16,8 +16,19 @@ export class TitleScene extends Phaser.Scene {
 
     // Vídeo de fundo em loop
     this.bgVideo = this.add.video(width / 2, height / 2, 'intro-video')
-    this.bgVideo.setDisplaySize(width, height).setDepth(0)
+    this.bgVideo.setDepth(0)
     this.bgVideo.play(true)
+
+    // Ajusta escala mantendo proporção — cobre a tela sem distorcer
+    const applyScale = () => {
+      const vid = this.bgVideo!.video
+      if (vid?.videoWidth) {
+        const scale = Math.max(width / vid.videoWidth, height / vid.videoHeight)
+        this.bgVideo!.setScale(scale)
+      }
+    }
+    this.bgVideo.on('created', applyScale)
+    applyScale()
 
     // PRESS START (pisca)
     const pressStart = this.add.text(960, 630, 'PRESS START', {
