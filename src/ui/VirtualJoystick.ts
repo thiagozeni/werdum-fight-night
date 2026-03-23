@@ -85,8 +85,8 @@ export class VirtualJoystick {
 
   private buildButtons() {
     const btns = [
-      { name: 'punch', label: 'J', x: 1506, y: 915, color: 0xff5544 },
-      { name: 'kick',  label: 'K', x: 1666, y: 855, color: 0x4488ff },
+      { name: 'punch', label: 'J', x: 1486, y: 915, color: 0xff5544 },
+      { name: 'kick',  label: 'K', x: 1656, y: 855, color: 0x4488ff },
       { name: 'block', label: '🛡', x: 1826, y: 775, color: 0xffaa33 },
     ]
 
