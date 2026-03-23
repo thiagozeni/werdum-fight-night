@@ -7,10 +7,14 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    // Barra de progresso simples
-    const { width, height } = this.scale
-    const bar = this.add.rectangle(width / 2, height / 2, 4, 20, 0xffffff)
-    this.load.on('progress', (v: number) => bar.setDisplaySize(v * 400, 20))
+    // Atualiza barra de progresso HTML
+    const loaderBar = document.getElementById('loader-bar')
+    const loaderPct = document.getElementById('loader-pct')
+    this.load.on('progress', (v: number) => {
+      const pct = Math.round(v * 100)
+      if (loaderBar) loaderBar.style.width = `${pct}%`
+      if (loaderPct) loaderPct.textContent = `${pct}%`
+    })
 
     // Vídeo de intro
     this.load.video('intro-video', 'videos/intro.mp4', true)
