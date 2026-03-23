@@ -74,8 +74,8 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private createDizzyStars(cx: number, cy: number) {
-    const orbitX = 28
-    const orbitY = 10
+    const orbitX = 31
+    const orbitY = 11
     const count  = 5
     const stars  = Array.from({ length: count }, () =>
       this.add.star(cx, cy, 5, 4, 9, 0xffe500).setDepth(5)
