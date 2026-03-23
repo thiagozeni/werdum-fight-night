@@ -30,6 +30,9 @@ export class TitleScene extends Phaser.Scene {
     this.bgVideo.on('created', applyScale)
     applyScale()
 
+    // Estrelas girando sobre a cabeça do Wand na intro
+    this.createDizzyStars(width * 0.95, height * 0.40)
+
     // PRESS START (pisca)
     const pressStart = this.add.text(960, 630, 'PRESS START', {
       fontSize: '42px', color: '#f3c204',
@@ -68,6 +71,28 @@ export class TitleScene extends Phaser.Scene {
     this.input.keyboard!.on('keydown-SPACE', () => this.goToSelect())
     this.input.keyboard!.on('keydown-ENTER', () => this.goToSelect())
     this.input.on('pointerdown', () => this.goToSelect())
+  }
+
+  private createDizzyStars(cx: number, cy: number) {
+    const orbitX = 28
+    const orbitY = 10
+    const count  = 3
+    const stars  = Array.from({ length: count }, () =>
+      this.add.star(cx, cy, 5, 4, 9, 0xffe500).setDepth(5)
+    )
+    let angle = 0
+    this.time.addEvent({
+      delay: 16,
+      loop: true,
+      callback: () => {
+        angle += 0.045
+        stars.forEach((star, i) => {
+          const a = angle + (i / count) * Math.PI * 2
+          star.setPosition(cx + Math.cos(a) * orbitX, cy + Math.sin(a) * orbitY)
+          star.setAngle(star.angle + 4)
+        })
+      },
+    })
   }
 
   private goToSelect() {
