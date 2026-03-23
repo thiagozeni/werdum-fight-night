@@ -48,6 +48,18 @@
     </style>
   </head>
   <body>
+    <div id="loader-overlay" style="
+      position: fixed; inset: 0; z-index: 999;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease;
+    ">
+      <video autoplay loop muted playsinline style="
+        width: 60%; height: 60%; object-fit: contain;
+      ">
+        <source src="videos/loader.m4v" type="video/mp4">
+      </video>
+    </div>
     <div id="game-wrap"></div>
     <div id="rotate-msg">
       <div style="font-size:48px">&#8635;</div>
