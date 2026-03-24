@@ -139,31 +139,45 @@
           overlay.removeEventListener('click',      start)
           overlay.removeEventListener('touchstart', start)
 
-          // Fullscreen apenas no mobile
-          var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
-          if (isMobile) {
-            var el = document.documentElement
-            var fsPromise = null
-            try {
-              if      (el.requestFullscreen)            fsPromise = el.requestFullscreen({ navigationUI: 'hide' })
-              else if (el.webkitRequestFullscreen)      fsPromise = el.webkitRequestFullscreen()
-              else if (el.mozRequestFullScreen)         fsPromise = el.mozRequestFullScreen()
-            } catch(e) {}
-            if (fsPromise && fsPromise.catch) fsPromise.catch(function() {})
-            // Trava orientação em landscape (melhor suporte no Android Chrome)
+          function proceed() {
+            overlay.style.opacity = '0'
+            setTimeout(function() {
+              overlay.remove()
+              onStart()
+              if (typeof window.__showIOSBanner === 'function') {
+                setTimeout(window.__showIOSBanner, 3000)
+              }
+            }, 500)
+          }
+
+          function lockOrientation() {
             if (screen.orientation && screen.orientation.lock) {
               screen.orientation.lock('landscape').catch(function() {})
             }
           }
 
-          overlay.style.opacity = '0'
-          setTimeout(function() {
-            overlay.remove()
-            onStart()
-            if (typeof window.__showIOSBanner === 'function') {
-              setTimeout(window.__showIOSBanner, 3000)
+          var isAndroid = /Android/i.test(navigator.userAgent)
+          if (isAndroid) {
+            var el = document.documentElement
+            var fsPromise = null
+            try {
+              if      (el.requestFullscreen)       fsPromise = el.requestFullscreen()
+              else if (el.webkitRequestFullscreen) fsPromise = el.webkitRequestFullscreen()
+            } catch(e) {}
+
+            if (fsPromise) {
+              fsPromise.then(function() {
+                lockOrientation()
+                proceed()
+              }).catch(function() {
+                proceed()
+              })
+            } else {
+              proceed()
             }
-          }, 500)
+          } else {
+            proceed()
+          }
         }
 
         overlay.addEventListener('click',      start)
