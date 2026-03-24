@@ -29,6 +29,9 @@
         height: 100%;
         background: #000;
         overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
       }
       #game-wrap {
         position: fixed;
@@ -158,26 +161,17 @@
 
           var isAndroid = /Android/i.test(navigator.userAgent)
           if (isAndroid) {
-            var el = document.documentElement
-            var fsPromise = null
             try {
-              if      (el.requestFullscreen)       fsPromise = el.requestFullscreen()
-              else if (el.webkitRequestFullscreen) fsPromise = el.webkitRequestFullscreen()
+              var el = document.documentElement
+              var fsPromise = el.requestFullscreen ? el.requestFullscreen()
+                            : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+                            : null
+              if (fsPromise && fsPromise.then) {
+                fsPromise.then(lockOrientation).catch(function(){})
+              }
             } catch(e) {}
-
-            if (fsPromise) {
-              fsPromise.then(function() {
-                lockOrientation()
-                proceed()
-              }).catch(function() {
-                proceed()
-              })
-            } else {
-              proceed()
-            }
-          } else {
-            proceed()
           }
+          proceed()
         }
 
         overlay.addEventListener('click',      start)
