@@ -317,7 +317,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this.attackCooldown = Math.max(0, this.attackCooldown - delta)
     this.noHitTimer += delta
 
-    if (this.noHitTimer > 3000 && this.target !== 'wand') {
+    if (this.noHitTimer > 1500 && this.target !== 'wand') {
       this.target = 'wand'
     }
 
