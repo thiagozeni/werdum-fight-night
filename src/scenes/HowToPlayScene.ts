@@ -32,7 +32,7 @@ export class HowToPlayScene extends Phaser.Scene {
     ]
 
     const lStyle = {
-      fontSize: '33px', color: '#f3c204',
+      fontSize: '30px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 3,
     }
@@ -40,23 +40,23 @@ export class HowToPlayScene extends Phaser.Scene {
 
     const startY = 210
     controls.forEach(([label, value], i) => {
-      const y = startY + i * 100
+      const y = startY + i * 85
       this.add.text(430, y, label, lStyle).setOrigin(1, 0).setDepth(2)
       this.add.text(460, y, value, vStyle).setOrigin(0, 0).setDepth(2)
     })
 
     // Separador
-    this.add.rectangle(width / 2, 832, 1100, 3, 0x4488ff, 0.6).setDepth(2)
+    this.add.rectangle(width / 2, 754, 1100, 3, 0x4488ff, 0.6).setDepth(2)
 
     // Objetivo
-    this.add.text(width / 2, 858, '⚡  PROTEJA O WAND DOS INIMIGOS!  ⚡', {
+    this.add.text(width / 2, 780, '⚡  PROTEJA O WAND DOS INIMIGOS!  ⚡', {
       fontSize: '36px', color: '#ff9944',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5, 0).setDepth(2)
 
     // Press start
-    const skip = this.add.text(width / 2, 983, 'PRESS START', {
+    const skip = this.add.text(width / 2, 905, 'PRESS START', {
       fontSize: '50px', color: '#aaddff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
