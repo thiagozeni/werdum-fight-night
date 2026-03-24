@@ -137,11 +137,17 @@
           var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
           if (isMobile) {
             var el = document.documentElement
+            var fsPromise = null
             try {
-              if      (el.requestFullscreen)            el.requestFullscreen({ navigationUI: 'hide' })
-              else if (el.webkitRequestFullscreen)      el.webkitRequestFullscreen()
-              else if (el.mozRequestFullScreen)         el.mozRequestFullScreen()
+              if      (el.requestFullscreen)            fsPromise = el.requestFullscreen({ navigationUI: 'hide' })
+              else if (el.webkitRequestFullscreen)      fsPromise = el.webkitRequestFullscreen()
+              else if (el.mozRequestFullScreen)         fsPromise = el.mozRequestFullScreen()
             } catch(e) {}
+            if (fsPromise && fsPromise.catch) fsPromise.catch(function() {})
+            // Trava orientação em landscape (melhor suporte no Android Chrome)
+            if (screen.orientation && screen.orientation.lock) {
+              screen.orientation.lock('landscape').catch(function() {})
+            }
           }
 
           overlay.style.opacity = '0'
