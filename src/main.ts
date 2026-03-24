@@ -26,4 +26,14 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 }
 
-document.fonts.load('16px "Press Start 2P"').then(() => new Phaser.Game(config))
+document.fonts.load('16px "Press Start 2P"').then(() => {
+  const game = new Phaser.Game(config)
+
+  // iOS PWA: viewport demora para reportar dimensões corretas
+  setTimeout(() => game.scale.refresh(), 300)
+
+  // Recalcula escala após rotação (iOS PWA não dispara resize confiável)
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => game.scale.refresh(), 300)
+  })
+})
