@@ -193,7 +193,7 @@ export class YouWinScene extends Phaser.Scene {
       saveOk = true
     } catch (e) {
       console.error('[Leaderboard] Erro ao salvar:', e)
-      this.statusText.setText('ERRO AO SALVAR: ' + (e instanceof Error ? e.message : String(e)))
+      this.statusText.setText('ERRO AO SALVAR PONTUAÇÃO')
       this.statusText.setColor('#ff4444')
       // Aguarda 3s e vai mesmo assim
       await new Promise(r => this.time.delayedCall(3000, r))
