@@ -45,9 +45,6 @@ export class HowToPlayScene extends Phaser.Scene {
       this.add.text(460, y, value, vStyle).setOrigin(0, 0).setDepth(2)
     })
 
-    // Separador
-    this.add.rectangle(width / 2, 754, 1100, 3, 0x4488ff, 0.6).setDepth(2)
-
     // Objetivo
     this.add.text(width / 2, 780, '⚡  PROTEJA O WAND DOS INIMIGOS!  ⚡', {
       fontSize: '36px', color: '#ff9944',
