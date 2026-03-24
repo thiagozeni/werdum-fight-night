@@ -138,9 +138,11 @@
         if (progress) progress.style.display = 'none'
         if (playBtn)  playBtn.style.display = 'flex'
 
+        // touch-action: manipulation elimina o delay de 300ms no click mobile
+        overlay.style.touchAction = 'manipulation'
+
         function start() {
-          overlay.removeEventListener('click',      start)
-          overlay.removeEventListener('touchstart', start)
+          overlay.removeEventListener('click', start)
 
           function proceed() {
             overlay.style.opacity = '0'
@@ -174,8 +176,8 @@
           proceed()
         }
 
-        overlay.addEventListener('click',      start)
-        overlay.addEventListener('touchstart', start)
+        // Apenas 'click' — universalmente aceito pelo Android Chrome para requestFullscreen
+        overlay.addEventListener('click', start)
       }
     </script>
     <script type="module" src="/src/main.ts"></script>
