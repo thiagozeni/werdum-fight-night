@@ -114,9 +114,27 @@ export class TitleScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TopTenScene'))
   }
 
+  private tryFullscreen() {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
+    if (!isMobile) return
+    if (document.fullscreenElement) return
+    const el = document.documentElement as any
+    try {
+      const p = el.requestFullscreen ? el.requestFullscreen()
+              : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+              : null
+      if (p?.then) {
+        p.then(() => {
+          if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {})
+        }).catch(() => {})
+      }
+    } catch (_) {}
+  }
+
   private goToSelect() {
     if (this.navigating) return
     this.navigating = true
+    this.tryFullscreen()
     sound.select()
     this.bgVideo?.stop()
     this.cameras.main.fadeOut(400, 0, 0, 0)
