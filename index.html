@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="imgs/cachorradas-logo.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen" />
+    <meta name="apple-mobile-web-app-title" content="Werdum Fight" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="imgs/apple-touch-icon.png" />
     <title>Werdum Fight Night</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +157,13 @@
           }
 
           overlay.style.opacity = '0'
-          setTimeout(function() { overlay.remove(); onStart() }, 500)
+          setTimeout(function() {
+            overlay.remove()
+            onStart()
+            if (typeof window.__showIOSBanner === 'function') {
+              setTimeout(window.__showIOSBanner, 3000)
+            }
+          }, 500)
         }
 
         overlay.addEventListener('click',      start)
@@ -159,5 +171,44 @@
       }
     </script>
     <script type="module" src="/src/main.ts"></script>
+
+    <!-- Banner iOS: aparece só no Safari (não standalone) -->
+    <div id="ios-banner" style="
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
+      background: rgba(0,0,0,0.92);
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding: 14px 20px 20px;
+      font-family: -apple-system, sans-serif;
+      color: #fff;
+      text-align: center;
+    ">
+      <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
+        Para jogar em tela cheia, adicione à tela inicial:<br>
+        toque em <strong>&#9633; Compartilhar</strong> → <strong>Adicionar à Tela de Início</strong>
+      </div>
+      <button onclick="document.getElementById('ios-banner').style.display='none'" style="
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 12px;
+        padding: 6px 18px;
+        cursor: pointer;
+      ">Fechar</button>
+    </div>
+    <script>
+      (function() {
+        var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        var isStandalone = window.navigator.standalone === true
+        if (isIOS && !isStandalone) {
+          // Mostra o banner só depois que o jogo iniciar (aguarda o overlay sumir)
+          window.__showIOSBanner = function() {
+            var banner = document.getElementById('ios-banner')
+            if (banner) banner.style.display = 'block'
+          }
+        }
+      })()
+    </script>
   </body>
 </html>
