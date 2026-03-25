@@ -19,6 +19,17 @@ export class TopTenScene extends Phaser.Scene {
     this.add.image(width / 2, height / 2, 'select-player-bg').setDisplaySize(width, height).setDepth(0)
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(1)
 
+    // Botão VOLTAR
+    const back = this.add.text(60, 60, '← VOLTAR', {
+      fontSize: '28px', color: '#ffffff',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 4,
+    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2).setInteractive({ useHandCursor: true })
+    back.on('pointerdown', (_p: any, _lx: number, _ly: number, event: any) => {
+      event.stopPropagation()
+      this.goToTitle()
+    })
+
     // Título
     this.add.text(960, 70, 'TOP 10', {
       fontSize: '90px', color: '#f3c204',
@@ -124,8 +135,10 @@ export class TopTenScene extends Phaser.Scene {
     this.time.delayedCall(800, () => {
       this.input.keyboard!.off('keydown-SPACE')
       this.input.keyboard!.off('keydown-ENTER')
-      this.input.keyboard!.on('keydown-SPACE', () => this.goToTitle())
-      this.input.keyboard!.on('keydown-ENTER', () => this.goToTitle())
+      this.input.keyboard!.off('keydown-ESCAPE')
+      this.input.keyboard!.on('keydown-SPACE',  () => this.goToTitle())
+      this.input.keyboard!.on('keydown-ENTER',  () => this.goToTitle())
+      this.input.keyboard!.on('keydown-ESCAPE', () => this.goToTitle())
     })
   }
 

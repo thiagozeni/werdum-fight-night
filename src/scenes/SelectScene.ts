@@ -129,13 +129,11 @@ export class SelectScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(4)
 
     // Botão VOLTAR
-    const back = this.add.text(80, height - 60, '← VOLTAR', {
+    const back = this.add.text(60, 60, '← VOLTAR', {
       fontSize: '28px', color: '#ffffff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0, 0.5).setDepth(2).setInteractive({ useHandCursor: true })
-    back.on('pointerover',  () => back.setColor('#f3c204'))
-    back.on('pointerout',   () => back.setColor('#ffffff'))
+    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2).setInteractive({ useHandCursor: true })
     back.on('pointerdown',  (_p: any, _lx: number, _ly: number, event: any) => {
       event.stopPropagation()
       this.goBack()
