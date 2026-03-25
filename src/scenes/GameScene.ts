@@ -544,8 +544,18 @@ export class GameScene extends Phaser.Scene {
     })
     const quitBtn   = makeBtn('SAIR',      height / 2 + 115, () => {
       sound.stopBgMusic()
+      // Limpa todo o estado de partida para um novo jogo limpo
+      this.registry.remove('continueFromWave')
+      this.registry.remove('continueCount')
+      this.registry.remove('gameOverScore')
+      this.registry.remove('gameOverWave')
+      this.registry.remove('totalWaves')
+      this.registry.remove('youWinScore')
+      this.registry.remove('youWinKills')
+      this.registry.remove('youWinTime')
+      this.registry.remove('selectedChar')
       this.cameras.main.fadeOut(300, 0, 0, 0)
-      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('SelectScene'))
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TitleScene'))
     })
 
     container.add([bg, title, resumeBtn, muteBtn, quitBtn])
