@@ -254,8 +254,11 @@ export class GameScene extends Phaser.Scene {
     // Fim de wave
     if (this.waveActive && this.spawnQueue.length === 0 && this.enemies.length === 0) {
       this.waveActive = false
-      this.waveEndTimer = 3000
-      if (this.currentWave < WAVES.length) {
+      if (this.currentWave >= WAVES.length) {
+        // Última wave — dispara vitória imediatamente, sem delay
+        if (!this.isGameOver) this.startNextWave()
+      } else {
+        this.waveEndTimer = 3000
         sound.waveComplete()
         this.hud.showWaveComplete()
       }
@@ -540,6 +543,7 @@ export class GameScene extends Phaser.Scene {
       const m = sound.toggleMute(); this.hud.showMuteStatus(m)
     })
     const quitBtn   = makeBtn('SAIR',      height / 2 + 115, () => {
+      sound.stopBgMusic()
       this.cameras.main.fadeOut(300, 0, 0, 0)
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('SelectScene'))
     })
@@ -569,6 +573,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showVictory() {
+    if (this.isGameOver) return
     this.isGameOver = true
     sound.stopBgMusic()
     sound.victory()

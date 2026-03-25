@@ -189,7 +189,7 @@ export class YouWinScene extends Phaser.Scene {
 
     let saveOk = false
     try {
-      await saveScore({ player_name: name, character, continues: Math.floor(continues), time_ms: Math.floor(timeMs), score: Math.floor(score) })
+      await saveScore({ player_name: name, character, continues: Math.floor(continues), time_ms: Math.floor(timeMs / 1000) * 1000, score: Math.floor(score) })
       saveOk = true
     } catch (e) {
       console.error('[Leaderboard] Erro ao salvar:', e)

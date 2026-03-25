@@ -33,6 +33,7 @@ export class SelectScene extends Phaser.Scene {
     this.isConfirming = false
     this.selectedIndex = 0
     this.boxBorders = []
+    sound.startIntroMusic()
 
     const { width, height } = this.scale
 
@@ -127,6 +128,19 @@ export class SelectScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5, 0).setDepth(4)
 
+    // Botão VOLTAR
+    const back = this.add.text(80, height - 60, '← VOLTAR', {
+      fontSize: '28px', color: '#ffffff',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 4,
+    }).setOrigin(0, 0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    back.on('pointerover',  () => back.setColor('#f3c204'))
+    back.on('pointerout',   () => back.setColor('#ffffff'))
+    back.on('pointerdown',  (_p: any, _lx: number, _ly: number, event: any) => {
+      event.stopPropagation()
+      this.goBack()
+    })
+
     // Controles
     this.input.keyboard!.off('keydown-LEFT')
     this.input.keyboard!.off('keydown-RIGHT')
@@ -134,12 +148,14 @@ export class SelectScene extends Phaser.Scene {
     this.input.keyboard!.off('keydown-D')
     this.input.keyboard!.off('keydown-SPACE')
     this.input.keyboard!.off('keydown-ENTER')
+    this.input.keyboard!.off('keydown-ESCAPE')
     this.input.keyboard!.on('keydown-LEFT',  () => this.selectChar((this.selectedIndex - 1 + CHARACTERS.length) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-RIGHT', () => this.selectChar((this.selectedIndex + 1) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-A',     () => this.selectChar((this.selectedIndex - 1 + CHARACTERS.length) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-D',     () => this.selectChar((this.selectedIndex + 1) % CHARACTERS.length))
     this.input.keyboard!.on('keydown-SPACE', () => this.confirmSelection())
     this.input.keyboard!.on('keydown-ENTER', () => this.confirmSelection())
+    this.input.keyboard!.on('keydown-ESCAPE', () => this.goBack())
 
     this.selectChar(0)
   }
@@ -179,5 +195,13 @@ export class SelectScene extends Phaser.Scene {
     this.registry.set('selectedChar', char.key)
     this.cameras.main.fadeOut(400, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('GameScene'))
+  }
+
+  private goBack() {
+    if (this.isConfirming) return
+    this.isConfirming = true
+    sound.select()
+    this.cameras.main.fadeOut(400, 0, 0, 0)
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('HowToPlayScene'))
   }
 }

@@ -2,11 +2,14 @@ import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 
 export class HowToPlayScene extends Phaser.Scene {
+  private navigating = false
+
   constructor() {
     super({ key: 'HowToPlayScene' })
   }
 
   create() {
+    this.navigating = false
     const { width, height } = this.scale
 
     this.cameras.main.fadeIn(300, 0, 0, 0)
@@ -57,20 +60,48 @@ export class HowToPlayScene extends Phaser.Scene {
       fontSize: '50px', color: '#aaddff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2)
+    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
 
     this.tweens.add({ targets: skip, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 })
+    skip.on('pointerdown', (_p: any, _lx: number, _ly: number, event: any) => {
+      event.stopPropagation()
+      this.go()
+    })
+
+    // Botão VOLTAR
+    const back = this.add.text(80, height - 60, '← VOLTAR', {
+      fontSize: '28px', color: '#ffffff',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000', strokeThickness: 4,
+    }).setOrigin(0, 0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    back.on('pointerover',  () => back.setColor('#f3c204'))
+    back.on('pointerout',   () => back.setColor('#ffffff'))
+    back.on('pointerdown',  (_p: any, _lx: number, _ly: number, event: any) => {
+      event.stopPropagation()
+      this.goBack()
+    })
 
     this.time.delayedCall(300, () => {
-      this.input.keyboard!.on('keydown-SPACE', () => this.go())
-      this.input.keyboard!.on('keydown-ENTER', () => this.go())
+      this.input.keyboard!.on('keydown-SPACE',  () => this.go())
+      this.input.keyboard!.on('keydown-ENTER',  () => this.go())
+      this.input.keyboard!.on('keydown-ESCAPE', () => this.goBack())
       this.input.on('pointerdown', () => this.go())
     })
   }
 
   private go() {
+    if (this.navigating) return
+    this.navigating = true
     sound.select()
     this.cameras.main.fadeOut(300, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('SelectScene'))
+  }
+
+  private goBack() {
+    if (this.navigating) return
+    this.navigating = true
+    sound.select()
+    this.cameras.main.fadeOut(300, 0, 0, 0)
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TitleScene'))
   }
 }
