@@ -125,7 +125,8 @@ export class TitleScene extends Phaser.Scene {
               : null
       if (p?.then) {
         p.then(() => {
-          if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {})
+          const ori = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }
+          if (ori?.lock) ori.lock('landscape').catch(() => {})
         }).catch(() => {})
       }
     } catch (_) {}

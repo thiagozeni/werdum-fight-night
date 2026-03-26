@@ -26,7 +26,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('bg-cachorradas',   'imgs/cenario/cachorradas.png')
     this.load.image('select-player-bg', 'imgs/cenario/select-player-bg.png')
     this.load.image('game-bg',          'imgs/cenario/game-bg.png')
-    this.load.image('game-cordas',      'imgs/cenario/game-cordas.png')
+    this.load.image('game-bg-ringue',   'imgs/cenario/bg-ringue.png')
+    this.load.image('game-cordas',      'imgs/cenario/cenario-cordas.png')
+    this.load.video('game-bg-video',    'videos/br-ringue.mp4', true)
 
     // Assets da tela de título
     this.load.image('logo',            'imgs/elementos/logo.png')

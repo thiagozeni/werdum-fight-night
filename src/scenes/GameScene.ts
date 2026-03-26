@@ -11,13 +11,13 @@ import { saveHighScore } from '../systems/HighScore'
 
 export const RING = {
   top: 650, bottom: 1000,
-  leftTop: 670,  leftBottom: 530,
-  rightTop: 1260, rightBottom: 1400,
+  leftTop: 670,  leftBottom: 430,
+  rightTop: 1260, rightBottom: 1530,
   // Limites laterais interpolados pela profundidade (y)
-  leftAt:  (y: number) => Phaser.Math.Linear(670, 530,  Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
-  rightAt: (y: number) => Phaser.Math.Linear(1260, 1400, Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
+  leftAt:  (y: number) => Phaser.Math.Linear(670, 430,  Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
+  rightAt: (y: number) => Phaser.Math.Linear(1260, 1530, Phaser.Math.Clamp((y - 650) / 350, 0, 1)),
   // Compat: limites extremos para código legado
-  left: 530, right: 1400,
+  left: 430, right: 1530,
 }
 
 interface WaveEnemy  { type: EnemyType; count: number }
@@ -107,9 +107,17 @@ export class GameScene extends Phaser.Scene {
 
     const selectedChar: string = this.registry.get('selectedChar') ?? 'werdum'
 
-    // Fundo estático — cenário do jogo
-    this.add.image(960, 540, 'game-bg').setDisplaySize(1920, 1080).setDepth(0)
-    this.add.image(960, 535, 'game-cordas').setDisplaySize(1920, 1080).setDepth(1000)
+    // Vídeo de fundo (loop, sem áudio)
+    const bgVideo = this.add.video(960, 540, 'game-bg-video')
+    bgVideo.setDepth(0)
+    bgVideo.on('play', () => bgVideo.setDisplaySize(1920, 1080))
+    bgVideo.play(true)
+
+    // Ringue estático sobreposto ao vídeo
+    this.add.image(960, 540, 'game-bg-ringue').setDisplaySize(1920, 1080).setDepth(1)
+
+    // Cordas frontais — acima de todos os personagens
+    this.add.image(960, 525, 'game-cordas').setDisplaySize(1920, 1080).setDepth(1000)
 
     // Wand (fundo direito do ringue)
     this.wand = new ProtectedChar(this, 1150, 710)

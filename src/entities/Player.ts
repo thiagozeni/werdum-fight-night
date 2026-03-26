@@ -128,8 +128,10 @@ export class Player extends Phaser.GameObjects.Sprite {
         }
         if (anim.key === `${key}-punch`) {
           if (this.punchComboQueued) {
-            this.punchComboQueued = false
+            // punchComboQueued permanece true até o combo iniciar de fato,
+            // para que a válvula de segurança em update() não libere o lock prematuramente
             this.scene.time.delayedCall(0, () => {
+              this.punchComboQueued = false
               sound.punch()
               this.play(`${key}-punch-combo`)
             })
@@ -356,6 +358,19 @@ export class Player extends Phaser.GameObjects.Sprite {
             this.setAngle(0)
           }
         })
+      }
+    }
+
+    // Segurança: libera animLocked se nenhuma animação de combate está ativa no momento.
+    // Evita travamento causado por animationcomplete não disparar em animações interrompidas
+    // (ex: hit chega durante punch-combo pendente, ou race condition de cooldown vs. animação).
+    if (this.hasAnims && this.animLocked && this.playerState === 'normal' && !this.blockAnimStarted) {
+      const currentKey = this.anims.currentAnim?.key ?? ''
+      const isCombatAnim = currentKey.endsWith('-punch') || currentKey.endsWith('-punch-combo')
+                        || currentKey.endsWith('-kick')  || currentKey.endsWith('-hit')
+      if ((!this.anims.isPlaying || !isCombatAnim) && !this.punchComboQueued) {
+        this.animLocked    = false
+        this.kickAnimLocked = false
       }
     }
 
