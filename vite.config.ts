@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/werdum-fight-night/',
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
