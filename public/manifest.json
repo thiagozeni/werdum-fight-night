@@ -2,7 +2,7 @@
   "name": "Werdum Fight Night",
   "short_name": "Werdum Fight",
   "description": "Ajude a salvar o Wand!",
-  "start_url": "/werdum-fight-night/",
+  "start_url": "/",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#000000",
