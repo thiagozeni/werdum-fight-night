@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Werdum Fight Night — Tela de Abertura</title>
+<style>
+  body { background: #000; display: flex; flex-direction: column; align-items: center;
+         justify-content: center; min-height: 100vh; margin: 0; }
+  canvas { image-rendering: pixelated; max-width: 100%; display: block; }
+  button { margin-top: 14px; padding: 10px 28px; background: #900; color: #fff;
+           border: none; font-size: 14px; font-family: monospace; cursor: pointer;
+           letter-spacing: 2px; text-transform: uppercase; }
+  button:hover { background: #c00; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1280" height="720"></canvas>
+<button onclick="baixar()">Salvar PNG</button>
+<script>
+const C = document.getElementById('c');
+const ctx = C.getContext('2d');
+const W = 1280, H = 720;
+
+// ── Pixel Font 5×7 ────────────────────────────────────────────────────────────
+const F = {
+  A:['01110','10001','10001','11111','10001','10001','10001'],
+  B:['11110','10001','10001','11110','10001','10001','11110'],
+  C:['01111','10000','10000','10000','10000','10000','01111'],
+  D:['11110','10001','10001','10001','10001','10001','11110'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],
+  F:['11111','10000','10000','11110','10000','10000','10000'],
+  G:['01111','10000','10000','10111','10001','10001','01111'],
+  H:['10001','10001','10001','11111','10001','10001','10001'],
+  I:['11111','00100','00100','00100','00100','00100','11111'],
+  J:['00111','00010','00010','00010','10010','10010','01100'],
+  K:['10001','10010','10100','11000','10100','10010','10001'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],
+  M:['10001','11011','10101','10001','10001','10001','10001'],
+  N:['10001','11001','10101','10011','10001','10001','10001'],
+  O:['01110','10001','10001','10001','10001','10001','01110'],
+  P:['11110','10001','10001','11110','10000','10000','10000'],
+  Q:['01110','10001','10001','10001','10101','10010','01101'],
+  R:['11110','10001','10001','11110','10100','10010','10001'],
+  S:['01111','10000','10000','01110','00001','00001','11110'],
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  U:['10001','10001','10001','10001','10001','10001','01110'],
+  V:['10001','10001','10001','10001','10001','01010','00100'],
+  W:['10001','10001','10001','10101','10101','11011','10001'],
+  X:['10001','10001','01010','00100','01010','10001','10001'],
+  Y:['10001','10001','01010','00100','00100','00100','00100'],
+  Z:['11111','00001','00010','00100','01000','10000','11111'],
+  ' ':['00000','00000','00000','00000','00000','00000','00000'],
+  '!':['00100','00100','00100','00100','00100','00000','00100'],
+};
+
+function textWidth(txt, sc) { return txt.length * (5 + 1) * sc - sc; }
+
+function drawText(txt, x, y, sc, col, shadow) {
+  let cx = x;
+  for (const ch of txt.toUpperCase()) {
+    const g = F[ch] || F[' '];
+    if (shadow) {
+      ctx.fillStyle = shadow;
+      for (let r = 0; r < 7; r++)
+        for (let c = 0; c < 5; c++)
+          if (g[r][c] === '1') ctx.fillRect(cx + c*sc + sc, y + r*sc + sc, sc, sc);
+    }
+    ctx.fillStyle = col;
+    for (let r = 0; r < 7; r++)
+      for (let c = 0; c < 5; c++)
+        if (g[r][c] === '1') ctx.fillRect(cx + c*sc, y + r*sc, sc, sc);
+    cx += (5 + 1) * sc;
+  }
+}
+
+function drawTextC(txt, y, sc, col, shadow) {
+  drawText(txt, Math.round((W - textWidth(txt, sc)) / 2), y, sc, col, shadow);
+}
+
+// ── Sprite loading com remoção de fundo branco ───────────────────────────────
+async function loadSprite(src, flipH = false) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const oc = document.createElement('canvas');
+      oc.width = img.width; oc.height = img.height;
+      const ox = oc.getContext('2d');
+      ox.drawImage(img, 0, 0);
+
+      // Remove fundo branco — pode lançar SecurityError em file://
+      try {
+        const id = ox.getImageData(0, 0, oc.width, oc.height);
+        const d = id.data;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) d[i+3] = 0;
+        }
+        ox.putImageData(id, 0, 0);
+      } catch(e) {
+        // Fallback: sem remoção de bg (protocolo file:// bloqueia getImageData)
+        console.warn('getImageData bloqueado para', src, '— usando sprite sem remoção de fundo.');
+      }
+
+      if (!flipH) { resolve(oc); return; }
+      const fc = document.createElement('canvas');
+      fc.width = img.width; fc.height = img.height;
+      const fx = fc.getContext('2d');
+      fx.translate(img.width, 0); fx.scale(-1, 1);
+      fx.drawImage(oc, 0, 0);
+      resolve(fc);
+    };
+    img.onerror = () => { console.warn('Erro ao carregar:', src); resolve(null); };
+    img.src = src;
+  });
+}
+
+// Desenha sprite normalizado por ALTURA em pixels (não por scale)
+// cx, cy = posição do pé do personagem
+function drawSprite(s, cx, cy, targetH) {
+  if (!s) return;
+  const sc = targetH / s.height;
+  const w  = Math.round(s.width  * sc);
+  const h  = Math.round(s.height * sc);
+  ctx.drawImage(s, cx - Math.round(w / 2), cy - h, w, h);
+}
+
+// ── Ringue ───────────────────────────────────────────────────────────────────
+const FLOOR_Y  = 390;   // topo do piso do ringue
+const ROPE_Y   = [316, 342, 368]; // 3 cordas
+const POST_X   = [52, 1228];      // postes dos cantos
+
+function drawBackground() {
+  // Arena escura
+  const bg = ctx.createLinearGradient(0, 0, 0, FLOOR_Y);
+  bg.addColorStop(0,   '#020408');
+  bg.addColorStop(0.5, '#060c18');
+  bg.addColorStop(1,   '#080a20');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, FLOOR_Y);
+
+  // Silhuetas da torcida
+  const rows = [
+    { y: 55,  h: 20, n: 64, cs: ['#0a051a','#05102a','#100820','#12060e'] },
+    { y: 90,  h: 26, n: 52, cs: ['#110828','#081538','#160a28','#1a0c14'] },
+    { y: 132, h: 32, n: 40, cs: ['#180b32','#0e1e42','#1e0e32','#221015'] },
+    { y: 182, h: 38, n: 30, cs: ['#1e1038','#12254e','#221238','#281216'] },
+    { y: 242, h: 46, n: 22, cs: ['#261440','#162c56','#2a1442','#30141a'] },
+  ];
+  for (const row of rows) {
+    const sw = W / row.n;
+    for (let i = 0; i < row.n; i++) {
+      const hx = i * sw + sw * 0.3 + Math.sin(i * 6.7 + row.y) * sw * 0.12;
+      ctx.fillStyle = row.cs[i % row.cs.length];
+      ctx.fillRect(Math.round(hx), row.y + Math.round(row.h * 0.45),
+                   Math.round(sw * 0.75), Math.round(row.h * 0.65));
+      const hr = Math.round(row.h * 0.42);
+      ctx.beginPath();
+      ctx.arc(Math.round(hx + sw * 0.38), row.y + Math.round(row.h * 0.22), hr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // divisória sutil entre fileiras
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.fillRect(0, row.y - 3, W, 2);
+  }
+}
+
+function drawRing() {
+  // Saia do ringue (apron)
+  ctx.fillStyle = '#14101e';
+  ctx.fillRect(0, ROPE_Y[0] - 22, W, 22);
+
+  // Piso do ringue
+  const fg = ctx.createLinearGradient(0, FLOOR_Y, 0, H);
+  fg.addColorStop(0,   '#e0cc8a');
+  fg.addColorStop(0.2, '#d8c07e');
+  fg.addColorStop(1,   '#c4ac68');
+  ctx.fillStyle = fg;
+  ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
+
+  // Linhas do piso (textura de lona)
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  // Linha central vertical
+  ctx.beginPath(); ctx.moveTo(W/2, FLOOR_Y); ctx.lineTo(W/2, H); ctx.stroke();
+  // Linha central horizontal
+  ctx.beginPath(); ctx.moveTo(0, FLOOR_Y + (H-FLOOR_Y)*0.5);
+  ctx.lineTo(W, FLOOR_Y + (H-FLOOR_Y)*0.5); ctx.stroke();
+  // Círculo central
+  ctx.beginPath();
+  ctx.arc(W/2, FLOOR_Y + (H-FLOOR_Y)*0.5, 80, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bordas do piso
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(W, FLOOR_Y); ctx.stroke();
+
+  // Cantos coloridos (canto vermelho = esquerda, azul = direita)
+  ctx.fillStyle = '#cc0000';
+  ctx.fillRect(0, FLOOR_Y, 80, 12);
+  ctx.fillRect(0, FLOOR_Y, 12, 90);
+  ctx.fillStyle = '#0055cc';
+  ctx.fillRect(W - 80, FLOOR_Y, 80, 12);
+  ctx.fillRect(W - 12, FLOOR_Y, 12, 90);
+
+  // Cordas
+  const ropeCols = ['#ffffff', '#cc0000', '#ffffff'];
+  for (let i = 0; i < 3; i++) {
+    // corpo da corda
+    ctx.fillStyle = ropeCols[i];
+    ctx.fillRect(POST_X[0], ROPE_Y[i] - 5, POST_X[1] - POST_X[0], 10);
+    // sombra embaixo
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(POST_X[0], ROPE_Y[i] + 5, POST_X[1] - POST_X[0], 4);
+  }
+
+  // Postes dos cantos
+  for (const px of POST_X) {
+    const isLeft = px < W / 2;
+    // corpo do poste
+    const pg = ctx.createLinearGradient(px - 14, 0, px + 14, 0);
+    pg.addColorStop(0, '#555'); pg.addColorStop(0.4, '#ddd'); pg.addColorStop(1, '#444');
+    ctx.fillStyle = pg;
+    ctx.fillRect(px - 14, ROPE_Y[0] - 35, 28, H - ROPE_Y[0] + 35);
+    // topo dourado
+    ctx.fillStyle = '#e0a800';
+    ctx.fillRect(px - 16, ROPE_Y[0] - 50, 32, 18);
+    // almofada colorida
+    ctx.fillStyle = isLeft ? '#aa0000' : '#004499';
+    ctx.fillRect(px - 20, ROPE_Y[0] - 22, 40, 88);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(px - 16, ROPE_Y[0] - 18, 32, 80);
+  }
+}
+
+function drawSpotlight() {
+  // Luz central vinda do teto
+  const sg = ctx.createRadialGradient(W/2, -60, 80, W/2, H*0.45, W * 0.65);
+  sg.addColorStop(0,   'rgba(255,240,160,0.20)');
+  sg.addColorStop(0.4, 'rgba(255,220,100,0.07)');
+  sg.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = sg;
+  ctx.fillRect(0, 0, W, H);
+  // Vinheta
+  const vg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, W*0.78);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.60)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawTitle() {
+  // Faixa escura atrás do título
+  const tb = ctx.createLinearGradient(0, 0, 0, 160);
+  tb.addColorStop(0,   'rgba(0,0,0,0.90)');
+  tb.addColorStop(0.7, 'rgba(0,0,0,0.50)');
+  tb.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = tb;
+  ctx.fillRect(0, 0, W, 160);
+
+  // WERDUM — grande, vermelho com borda dourada
+  const t1 = 'WERDUM', s1 = 10;
+  const x1 = Math.round((W - textWidth(t1, s1)) / 2);
+  // contorno dourado multi-pixel
+  for (const [ox,oy] of [[-2,-2],[2,-2],[-2,2],[2,2],
+                          [-1,-2],[1,-2],[-2,-1],[2,-1],
+                          [-2,1],[2,1],[-1,2],[1,2],[0,-2],[0,2],[-2,0],[2,0]]) {
+    drawText(t1, x1+ox, 10+oy, s1, '#b88000', null);
+  }
+  // texto vermelho
+  drawText(t1, x1+1, 11, s1, '#880000', null);  // sombra
+  drawText(t1, x1, 10, s1, '#ff2200', null);
+
+  // FIGHT NIGHT — médio, amarelo
+  const t2 = 'FIGHT NIGHT', s2 = 6;
+  const x2 = Math.round((W - textWidth(t2, s2)) / 2);
+  for (const [ox,oy] of [[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1],[-1,0],[1,0]]) {
+    drawText(t2, x2+ox, 90+oy, s2, '#7a4000', null);
+  }
+  drawText(t2, x2+1, 91, s2, '#5a3000', null);
+  drawText(t2, x2, 90, s2, '#ffc800', null);
+
+  // Linhas decorativas
+  const lw = textWidth(t2, s2) + 48;
+  const lx = Math.round((W - lw) / 2);
+  ctx.fillStyle = '#b88000'; ctx.fillRect(lx, 142, lw, 3);
+  ctx.fillStyle = '#cc2200'; ctx.fillRect(lx + 8, 147, lw - 16, 2);
+
+  // PRESS START no rodapé
+  const ps = 'PRESS START', pss = 3;
+  const psx = Math.round((W - textWidth(ps, pss)) / 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, H - 42, W, 42);
+  drawText(ps, psx+1, H-30+1, pss, '#004422', null);
+  drawText(ps, psx, H-30, pss, '#00ee88', null);
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+async function main() {
+  const P = 'personagens/';
+
+  // [chave, arquivo, flipH]
+  // flipH=false → já vira para a DIREITA (bad guys ok para o lado esquerdo)
+  // flipH=true  → vira para a DIREITA (popo/coach olham esquerda, precisam flip)
+  const manifest = [
+    ['werdum',   'werdum_sideview.png',          false], // hero, olha esq ✓
+    ['dida',     'dida-sideview.png',             false], // hero, olha esq ✓
+    ['thor',     'thor-sideview.png',             false], // hero, olha esq ✓
+    ['popo',     'popo-sideview.png',             true],  // boss, olha esq → flip
+    ['coach',    'popo-coach-sideview.png',       true],  // boss, olha esq → flip
+    ['poposon',  'popo-son-sideview.png',         false], // olha dir ✓
+    ['fat',      'bad-guy-fat-sideview.png',      false], // olha dir ✓
+    ['strong',   'bad-guy-strong-sideview.png',   false], // olha dir ✓
+    ['guy1',     'bad-guy1-sideview.png',         false], // olha dir ✓
+    ['guy2',     'bad-guy2-sideview.png',         false],
+    ['guy3',     'bad-guy3-sideview.png',         false],
+    ['judge',    'judge-concerned.png',           false],
+    ['wand',     'wand-knockedout.png',           false],
+  ];
+
+  const sp = {};
+  await Promise.all(manifest.map(([k, f, flip]) =>
+    loadSprite(P + f, flip)
+      .then(s => { sp[k] = s; })
+      .catch(() => { sp[k] = null; })
+  ));
+
+  // ── Desenho das camadas ──────────────────────────────────────────────────
+  drawBackground();
+  drawRing();
+
+  const FEET = 672; // y dos pés de todos os personagens
+
+  // ── Wand nocauteado — canto superior direito do ringue ──────────────────
+  if (sp.wand) {
+    const wsc = 0.30;
+    const ww  = Math.round(sp.wand.width  * wsc);
+    const wh  = Math.round(sp.wand.height * wsc);
+    ctx.drawImage(sp.wand, W - ww - 40, FLOOR_Y + 8, ww, wh);
+  }
+
+  // Alturas em pixels (todos os personagens normalizados)
+  const H_HERO  = 265;  // heróis principais
+  const H_BOSS  = 270;  // chefões
+  const H_GRUNT = 230;  // capangas comuns
+  const H_JUDGE = 240;  // juiz
+
+  // ── LADO ESQUERDO — vilões (encarando para a DIREITA = centro) ───────────
+  drawSprite(sp.guy3,    80,  FEET, H_GRUNT);
+  drawSprite(sp.fat,     180, FEET, H_GRUNT - 20); // gordão: ligeiramente menor
+  drawSprite(sp.strong,  110, FEET, H_GRUNT + 10);
+  drawSprite(sp.poposon, 290, FEET, H_GRUNT + 15);
+  drawSprite(sp.coach,   205, FEET, H_BOSS - 10);
+  drawSprite(sp.guy2,    355, FEET, H_GRUNT);
+  drawSprite(sp.popo,    460, FEET, H_BOSS);       // boss em destaque
+
+  // ── CENTRO — juiz apavorado ──────────────────────────────────────────────
+  drawSprite(sp.judge,   640, FEET, H_JUDGE);
+
+  // ── LADO DIREITO — heróis (encarando para a ESQUERDA = centro) ──────────
+  drawSprite(sp.thor,    1155, FEET, H_HERO - 15);
+  drawSprite(sp.dida,    1045, FEET, H_HERO - 5);
+  drawSprite(sp.werdum,   870, FEET, H_HERO + 10); // protagonista em destaque
+
+  // ── Iluminação dramática (por cima dos personagens) ──────────────────────
+  drawSpotlight();
+
+  // ── Título e UI (por cima de tudo) ──────────────────────────────────────
+  drawTitle();
+}
+
+main();
+
+function baixar() {
+  const a = document.createElement('a');
+  a.download = 'tela-abertura-werdum-fight-night.png';
+  a.href = C.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>
