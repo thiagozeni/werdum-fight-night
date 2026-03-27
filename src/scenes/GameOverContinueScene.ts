@@ -118,6 +118,7 @@ export class GameOverContinueScene extends Phaser.Scene {
       this.registry.remove('continueFromWave')
       this.registry.remove('gameOverWave')
       this.registry.remove('gameOverScore')
+      this.registry.remove('gameOverTime')
       this.cameras.main.fadeOut(300, 0, 0, 0)
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TitleScene'))
     }
