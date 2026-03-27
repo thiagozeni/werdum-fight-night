@@ -193,6 +193,9 @@ export class GameScene extends Phaser.Scene {
     const continueWave = this.registry.get('continueFromWave') as number | undefined
     if (continueWave) {
       if (continueWave > 1) this.currentWave = continueWave - 1
+      this.score       = (this.registry.get('gameOverScore') as number) ?? 0
+      this.gameTimerMs = (this.registry.get('gameOverTime')  as number) ?? 0
+      this.hud.updateScore(this.score)
       this.registry.remove('continueFromWave')
     }
 
@@ -556,6 +559,7 @@ export class GameScene extends Phaser.Scene {
       this.registry.remove('continueFromWave')
       this.registry.remove('continueCount')
       this.registry.remove('gameOverScore')
+      this.registry.remove('gameOverTime')
       this.registry.remove('gameOverWave')
       this.registry.remove('totalWaves')
       this.registry.remove('youWinScore')
@@ -581,6 +585,7 @@ export class GameScene extends Phaser.Scene {
     this.saveHighScore()
 
     this.registry.set('gameOverScore', this.score)
+    this.registry.set('gameOverTime',  this.gameTimerMs)
     this.registry.set('gameOverWave',  this.currentWave)
     this.registry.set('totalWaves',    WAVES.length)
 
