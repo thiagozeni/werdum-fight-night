@@ -127,29 +127,29 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('bad-guy-chair-kick-sheet',      'sprites/enemies/bad-guy-chair-kick-sheet.png',      { frameWidth: 256, frameHeight: 240, endFrame: 24 })
     this.load.spritesheet('bad-guy-chair-knockdown-sheet', 'sprites/enemies/bad-guy-chair-knockdown-sheet.png', { frameWidth: 224, frameHeight: 240, endFrame: 24 })
 
-    // Spritesheets animados — popo
-    this.load.spritesheet('popo-idle-sheet',  'sprites/bosses/popo-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-walk-sheet',  'sprites/bosses/popo-walk-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-punch-sheet', 'sprites/bosses/popo-punch-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-kick-sheet',  'sprites/bosses/popo-kick-sheet.png',  { frameWidth: 224, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-hit-sheet',       'sprites/bosses/popo-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-knockdown-sheet', 'sprites/bosses/popo-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    // Spritesheets animados — coco
+    this.load.spritesheet('coco-idle-sheet',      'sprites/bosses/coco-idle-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
+    this.load.spritesheet('coco-walk-sheet',      'sprites/bosses/coco-walk-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
+    this.load.spritesheet('coco-punch-sheet',     'sprites/bosses/coco-punch-sheet.png',     { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
+    this.load.spritesheet('coco-kick-sheet',      'sprites/bosses/coco-kick-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
+    this.load.spritesheet('coco-hit-sheet',       'sprites/bosses/coco-hit-sheet.png',       { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
+    this.load.spritesheet('coco-knockdown-sheet', 'sprites/bosses/coco-knockdown-sheet.png', { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
 
-    // Spritesheets animados — popo-son
-    this.load.spritesheet('popo-son-idle-sheet',  'sprites/bosses/popo-son-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-son-walk-sheet',  'sprites/bosses/popo-son-walk-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-son-punch-sheet', 'sprites/bosses/popo-son-punch-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-son-kick-sheet',  'sprites/bosses/popo-son-kick-sheet.png',  { frameWidth: 224, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-son-hit-sheet',       'sprites/bosses/popo-son-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-son-knockdown-sheet', 'sprites/bosses/popo-son-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    // Spritesheets animados — son
+    this.load.spritesheet('son-idle-sheet',  'sprites/bosses/son-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('son-walk-sheet',  'sprites/bosses/son-walk-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('son-punch-sheet', 'sprites/bosses/son-punch-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('son-kick-sheet',  'sprites/bosses/son-kick-sheet.png',  { frameWidth: 224, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('son-hit-sheet',       'sprites/bosses/son-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('son-knockdown-sheet', 'sprites/bosses/son-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
 
-    // Spritesheets animados — popo-coach
-    this.load.spritesheet('popo-coach-idle-sheet',  'sprites/bosses/popo-coach-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-coach-walk-sheet',  'sprites/bosses/popo-coach-walk-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
-    this.load.spritesheet('popo-coach-punch-sheet', 'sprites/bosses/popo-coach-punch-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-coach-kick-sheet',  'sprites/bosses/popo-coach-kick-sheet.png',  { frameWidth: 224, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-coach-hit-sheet',       'sprites/bosses/popo-coach-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('popo-coach-knockdown-sheet', 'sprites/bosses/popo-coach-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    // Spritesheets animados — coach
+    this.load.spritesheet('coach-idle-sheet',  'sprites/bosses/coach-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('coach-walk-sheet',  'sprites/bosses/coach-walk-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('coach-punch-sheet', 'sprites/bosses/coach-punch-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coach-kick-sheet',  'sprites/bosses/coach-kick-sheet.png',  { frameWidth: 224, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coach-hit-sheet',       'sprites/bosses/coach-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coach-knockdown-sheet', 'sprites/bosses/coach-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
 
     // Spritesheets animados — Thor
     this.load.spritesheet('thor-idle-sheet',      'sprites/thor/thor-idle-sheet.png',      { frameWidth: 128, frameHeight: 240, endFrame: 35 })

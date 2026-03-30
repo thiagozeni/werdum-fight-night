@@ -35,7 +35,7 @@ const WAVES: WaveConfig[] = [
   { id: 9,  enemies: [{ type: 'weak',       count: 5 }, { type: 'strong', count: 2 }, { type: 'fat',    count: 1 }], spawnInterval: 900  },
   { id: 10, enemies: [{ type: 'boss_son',   count: 1 }, { type: 'weak',   count: 3 }],                              spawnInterval: 1500, isBoss: true },
   { id: 11, enemies: [{ type: 'weak',       count: 4 }, { type: 'strong', count: 2 }, { type: 'chair',  count: 1 }], spawnInterval: 900  },
-  { id: 12, enemies: [{ type: 'boss_popo',  count: 1 }, { type: 'weak',   count: 4 }],                              spawnInterval: 1200, isBoss: true },
+  { id: 12, enemies: [{ type: 'boss_coco',  count: 1 }, { type: 'weak',   count: 4 }],                              spawnInterval: 1200, isBoss: true },
 ]
 
 const ALL_CHARS = ['werdum', 'dida', 'thor']
@@ -100,8 +100,10 @@ export class GameScene extends Phaser.Scene {
     this.spawnQueue       = []
     this.spawnTimer       = 0
 
+    const continueFromWave = this.registry.get('continueFromWave') as number | undefined
+
     // Reseta continueCount apenas em partida nova (não continue)
-    if (!this.registry.get('continueFromWave')) {
+    if (!continueFromWave) {
       this.registry.set('continueCount', 0)
     }
 
@@ -190,9 +192,8 @@ export class GameScene extends Phaser.Scene {
     })
 
     // Suporte a "continue" — retoma da wave em que o jogador perdeu
-    const continueWave = this.registry.get('continueFromWave') as number | undefined
-    if (continueWave) {
-      if (continueWave > 1) this.currentWave = continueWave - 1
+    if (continueFromWave) {
+      if (continueFromWave > 1) this.currentWave = continueFromWave - 1
       this.score       = (this.registry.get('gameOverScore') as number) ?? 0
       this.gameTimerMs = (this.registry.get('gameOverTime')  as number) ?? 0
       this.hud.updateScore(this.score)
