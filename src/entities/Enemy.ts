@@ -2,11 +2,11 @@ import Phaser from 'phaser'
 import { RING } from '../scenes/GameScene'
 import { sound } from '../systems/SoundManager'
 
-export type EnemyType = 'weak' | 'fat' | 'strong' | 'chair' | 'boss_son' | 'boss_coach' | 'boss_popo'
+export type EnemyType = 'weak' | 'fat' | 'strong' | 'chair' | 'boss_son' | 'boss_coach' | 'boss_coco'
 
 export const ENEMY_SCORE: Record<EnemyType, number> = {
   weak: 10, strong: 25, chair: 25, fat: 40,
-  boss_son: 200, boss_coach: 300, boss_popo: 500,
+  boss_son: 200, boss_coach: 300, boss_coco: 500,
 }
 
 interface EnemyStats {
@@ -22,14 +22,14 @@ const STATS: Record<EnemyType, EnemyStats> = {
   chair:      { hp: 50,  speed: 65,  damageToPlayer: 18, damageToWand: 20, scale: 0.90 },
   boss_coach: { hp: 180, speed: 55,  damageToPlayer: 18, damageToWand: 20, scale: 0.90, isBoss: true },
   boss_son:   { hp: 280, speed: 85,  damageToPlayer: 25, damageToWand: 28, scale: 0.90, isBoss: true },
-  boss_popo:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true },
+  boss_coco:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true },
 }
 
 // Personagens com spritesheets de animação completos
 const ANIMATED_ENEMIES = new Set([
   'bad-guy1', 'bad-guy2', 'bad-guy3',
   'bad-guy-fat', 'bad-guy-strong', 'bad-guy-chair',
-  'popo', 'popo-son', 'popo-coach',
+  'coco', 'son', 'coach',
 ])
 
 interface AnimCfg {
@@ -45,14 +45,14 @@ const ANIM_CFG: Record<string, AnimCfg> = {
   'bad-guy-fat':   { idleEnd: 24, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 24, knockdownEnd: 35, attackFps: 18 },
   'bad-guy-strong':{ idleEnd: 35, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 35, knockdownEnd: 35, attackFps: 22 },
   'bad-guy-chair': { idleEnd: 35, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 24, knockdownEnd: 24, attackFps: 18 },
-  'popo':          { idleEnd: 35, walkEnd: 24, punchEnd: 24, kickEnd: 24, hitEnd: 35, knockdownEnd: 35, attackFps: 22 },
-  'popo-son':      { idleEnd: 24, walkEnd: 35, punchEnd: 24, kickEnd: 35, hitEnd: 35, knockdownEnd: 35, attackFps: 22 },
-  'popo-coach':    { idleEnd: 35, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 24, knockdownEnd: 35, attackFps: 22 },
+  'coco':          { idleEnd: 24, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 35, knockdownEnd: 35, attackFps: 22 },
+  'son':      { idleEnd: 24, walkEnd: 35, punchEnd: 24, kickEnd: 35, hitEnd: 35, knockdownEnd: 35, attackFps: 22 },
+  'coach':    { idleEnd: 35, walkEnd: 35, punchEnd: 24, kickEnd: 24, hitEnd: 24, knockdownEnd: 35, attackFps: 22 },
 }
 
 const WEAK_KEYS = ['bad-guy1', 'bad-guy2', 'bad-guy3']
 const BOSS_KEYS: Partial<Record<EnemyType, string>> = {
-  boss_son: 'popo-son', boss_coach: 'popo-coach', boss_popo: 'popo',
+  boss_son: 'son', boss_coach: 'coach', boss_coco: 'coco',
 }
 
 type AIState = 'approach' | 'waitBeforeAttack' | 'chasePlayer' | 'knockdown' | 'recover' | 'staggered' | 'dead'
@@ -195,8 +195,8 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this.target = this.playerRef
     this.noHitTimer = 0
 
-    // Fase 2 do boss_popo: HP < 100 → velocidade +40%
-    if (this.enemyType === 'boss_popo' && !this.inPhase2 && this.hp < 100) {
+    // Fase 2 do boss_coco: HP < 100 → velocidade +40%
+    if (this.enemyType === 'boss_coco' && !this.inPhase2 && this.hp < 100) {
       this.inPhase2 = true
       this.currentSpeed = this.baseSpeed * 1.4
       this.scene.cameras.main.shake(200, 0.008)
