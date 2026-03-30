@@ -10,7 +10,7 @@ const ANIMATED_ALLIES = new Set(['werdum', 'dida', 'thor'])
 const ALLY_STATS: Record<string, { speed: number; sizeScale: number; scaleH: number; svKey?: string }> = {
   werdum: { speed: 80,  sizeScale: 1.05, scaleH: 0.75 },
   dida:   { speed: 110, sizeScale: 1.00, scaleH: 0.98 },
-  thor:   { speed: 130, sizeScale: 0.95, scaleH: 0.94 },
+  thor:   { speed: 130, sizeScale: 0.97, scaleH: 0.94 },
 }
 
 // Escala horizontal por animação — normaliza corpo para ~120px/scaleY
