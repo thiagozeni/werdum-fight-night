@@ -128,12 +128,12 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('bad-guy-chair-knockdown-sheet', 'sprites/enemies/bad-guy-chair-knockdown-sheet.png', { frameWidth: 224, frameHeight: 240, endFrame: 24 })
 
     // Spritesheets animados — coco
-    this.load.spritesheet('coco-idle-sheet',      'sprites/bosses/coco-idle-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
-    this.load.spritesheet('coco-walk-sheet',      'sprites/bosses/coco-walk-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
-    this.load.spritesheet('coco-punch-sheet',     'sprites/bosses/coco-punch-sheet.png',     { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
-    this.load.spritesheet('coco-kick-sheet',      'sprites/bosses/coco-kick-sheet.png',      { frameWidth: 750, frameHeight: 1120, endFrame: 24 })
-    this.load.spritesheet('coco-hit-sheet',       'sprites/bosses/coco-hit-sheet.png',       { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
-    this.load.spritesheet('coco-knockdown-sheet', 'sprites/bosses/coco-knockdown-sheet.png', { frameWidth: 750, frameHeight: 1120, endFrame: 35 })
+    this.load.spritesheet('coco-idle-sheet',      'sprites/bosses/coco-idle-sheet.png',      { frameWidth: 160, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coco-walk-sheet',      'sprites/bosses/coco-walk-sheet.png',      { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('coco-punch-sheet',     'sprites/bosses/coco-punch-sheet.png',     { frameWidth: 160, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coco-kick-sheet',      'sprites/bosses/coco-kick-sheet.png',      { frameWidth: 160, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('coco-hit-sheet',       'sprites/bosses/coco-hit-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 35 })
+    this.load.spritesheet('coco-knockdown-sheet', 'sprites/bosses/coco-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })
 
     // Spritesheets animados — son
     this.load.spritesheet('son-idle-sheet',  'sprites/bosses/son-idle-sheet.png',  { frameWidth: 160, frameHeight: 240, endFrame: 24 })
