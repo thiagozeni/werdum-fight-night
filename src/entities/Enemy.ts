@@ -12,7 +12,7 @@ export const ENEMY_SCORE: Record<EnemyType, number> = {
 interface EnemyStats {
   hp: number; speed: number
   damageToPlayer: number; damageToWand: number
-  scale: number; isBoss?: boolean
+  scale: number; isBoss?: boolean; sizeScale?: number
 }
 
 const STATS: Record<EnemyType, EnemyStats> = {
@@ -22,7 +22,7 @@ const STATS: Record<EnemyType, EnemyStats> = {
   chair:      { hp: 50,  speed: 65,  damageToPlayer: 18, damageToWand: 20, scale: 0.90 },
   boss_coach: { hp: 180, speed: 55,  damageToPlayer: 18, damageToWand: 20, scale: 0.90, isBoss: true },
   boss_son:   { hp: 280, speed: 85,  damageToPlayer: 25, damageToWand: 28, scale: 0.90, isBoss: true },
-  boss_coco:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true },
+  boss_coco:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true, sizeScale: 1.12 },
 }
 
 // Personagens com spritesheets de animação completos
@@ -184,7 +184,7 @@ export class Enemy extends Phaser.GameObjects.Sprite {
     this._lastScaleY = this.y
     const stats = STATS[this.enemyType]
     const t = Phaser.Math.Clamp((this.y - RING.top) / (RING.bottom - RING.top), 0, 1)
-    this.dispH = Phaser.Math.Linear(204, 360, t)
+    this.dispH = Phaser.Math.Linear(204, 360, t) * (stats.sizeScale ?? 1.0)
     const scaleY = this.dispH / this.frameH
     this.setScale(scaleY * stats.scale, scaleY)
   }
