@@ -30,6 +30,13 @@ export class TitleScene extends Phaser.Scene {
     this.bgVideo.on('created', applyScale)
     applyScale()
 
+    // Logo "3 Contra Todos" — frente de todos os elementos
+    this.add.image(0, 0, 'logo-novo')
+      .setOrigin(0, 0)
+      .setPosition(550, -23)
+      .setDisplaySize(820, 388)
+      .setDepth(10)
+
     // Estrelas girando sobre a cabeça do Wand na intro
     this.createDizzyStars(width * 0.95 - 25, height * 0.40 - 45)
 

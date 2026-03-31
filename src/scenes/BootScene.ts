@@ -19,6 +19,9 @@ export class BootScene extends Phaser.Scene {
     // Vídeo de intro
     this.load.video('intro-video', 'videos/intro.mp4', true)
 
+    // Logo da intro
+    this.load.image('logo-novo', 'imgs/elementos/logo-novo.png')
+
     // Cenários
     this.load.image('intro-bg',         'imgs/cenario/intro-bg.png')
     this.load.image('arena',            'imgs/cenario/real.png')
