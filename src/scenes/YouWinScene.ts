@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 import { saveScore } from '../lib/leaderboard'
+import { nativeShare, haptics } from '../systems/NativeBridge'
 
 export class YouWinScene extends Phaser.Scene {
   private navigating = false
@@ -210,16 +211,76 @@ export class YouWinScene extends Phaser.Scene {
     this.registry.set('lastEntryTime', timeMs)
     this.registry.set('lastEntryScore', score)
 
+    // Oferece share antes de sair
+    await this.showSharePrompt(name, score)
+
     this.registry.remove('youWinScore')
     this.registry.remove('youWinKills')
     this.registry.remove('youWinTime')
     this.registry.remove('continueFromWave')
     this.registry.remove('gameOverWave')
     this.registry.remove('gameOverScore')
+    this.registry.remove('gameOverTime')
     this.registry.remove('continueCount')
 
     this.cameras.main.fadeOut(400, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TopTenScene'))
+  }
+
+  private showSharePrompt(playerName: string, score: number): Promise<void> {
+    return new Promise(resolve => {
+      const { width } = this.scale
+
+      // Limpa texto de status anterior
+      this.statusText?.destroy()
+
+      const btnStyle = {
+        fontSize: '28px', color: '#000000',
+        fontFamily: '"Press Start 2P", monospace',
+        backgroundColor: '#f3c204',
+        padding: { x: 24, y: 12 },
+      }
+
+      const skipStyle = {
+        fontSize: '20px', color: '#aaaaaa',
+        fontFamily: '"Press Start 2P", monospace',
+        stroke: '#000000', strokeThickness: 3,
+      }
+
+      const shareBtn = this.add.text(width / 2 - 180, 690, 'SHARE', btnStyle)
+        .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
+
+      const skipBtn = this.add.text(width / 2 + 180, 690, 'SKIP >', skipStyle)
+        .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
+
+      const cleanup = () => {
+        shareBtn.destroy()
+        skipBtn.destroy()
+      }
+
+      shareBtn.on('pointerdown', async () => {
+        haptics.light()
+        cleanup()
+        try {
+          await nativeShare.shareVictory(playerName, score)
+        } catch { /* usuário cancelou share dialog */ }
+        resolve()
+      })
+
+      skipBtn.on('pointerdown', () => {
+        haptics.selection()
+        cleanup()
+        resolve()
+      })
+
+      // Auto-skip após 8s
+      this.time.delayedCall(8000, () => {
+        if (shareBtn.active) {
+          cleanup()
+          resolve()
+        }
+      })
+    })
   }
 
   shutdown() {

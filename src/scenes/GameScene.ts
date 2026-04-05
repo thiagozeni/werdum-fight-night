@@ -8,6 +8,7 @@ import { VirtualJoystick } from '../ui/VirtualJoystick'
 import { spawnDamageNumber } from '../ui/DamageNumber'
 import { sound } from '../systems/SoundManager'
 import { saveHighScore } from '../systems/HighScore'
+import { haptics, notifications, appLifecycle } from '../systems/NativeBridge'
 
 export const RING = {
   top: 650, bottom: 1000,
@@ -200,6 +201,16 @@ export class GameScene extends Phaser.Scene {
       this.registry.remove('continueFromWave')
     }
 
+    // Native: pause/resume e status bar
+    appLifecycle.init(
+      () => { if (!this.isPaused) this.togglePause() },
+      () => { /* resume handled by game state */ },
+    )
+
+    // Native: agendar notificações
+    notifications.scheduleDailyChallenge()
+    notifications.scheduleReturnReminder()
+
     sound.startBgMusic()
     this.cameras.main.fadeIn(500, 0, 0, 0)
     this.time.delayedCall(1200, () => { if (!this.isGameOver) this.startNextWave() })
@@ -272,6 +283,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.waveEndTimer = 3000
         sound.waveComplete()
+        haptics.success()
         this.hud.showWaveComplete()
       }
     }
@@ -353,9 +365,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (hitAny) {
+      type === 'punch' ? haptics.medium() : haptics.heavy()
       this.comboCount++
       this.comboTimer = this.COMBO_WINDOW
       this.hud.showCombo(this.comboCount)
+      if (this.comboCount === 3 || this.comboCount === 5 || this.comboCount === 10) {
+        haptics.success()
+      }
     }
   }
 
@@ -436,6 +452,7 @@ export class GameScene extends Phaser.Scene {
   private onEnemyAttackWand(enemy: Enemy) {
     const isDead = this.wand.takeDamage(enemy.damageToWand)
     this.hud.updateWandHP(this.wand.hp, this.wand.maxHp)
+    haptics.warning()
     if (isDead) this.gameOver()
   }
 
@@ -463,6 +480,9 @@ export class GameScene extends Phaser.Scene {
       this.player.knockdown()
       this.comboCount = 0
       this.hud.showCombo(0)
+      haptics.error()
+    } else if (!this.player.isBlocking) {
+      haptics.heavy()
     }
     if (this.playerHP <= 0) this.gameOver()
   }
@@ -583,6 +603,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = true
     sound.stopBgMusic()
     sound.gameOver()
+    haptics.error()
     this.saveHighScore()
 
     this.registry.set('gameOverScore', this.score)
@@ -601,6 +622,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = true
     sound.stopBgMusic()
     sound.victory()
+    haptics.success()
     this.saveHighScore()
 
     this.registry.set('youWinScore', this.score)
