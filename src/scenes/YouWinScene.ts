@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 import { saveScore } from '../lib/leaderboard'
 import { nativeShare, haptics } from '../systems/NativeBridge'
+import { gameCenter, GC_ACHIEVEMENTS, localProgress } from '../systems/GameCenterBridge'
 
 export class YouWinScene extends Phaser.Scene {
   private navigating = false
@@ -189,6 +190,19 @@ export class YouWinScene extends Phaser.Scene {
     }).setDepth(5)
 
     const cheatUsed = this.registry.get('cheatUsed') === true
+
+    // Game Center: submit score + achievements de vitória (não conta se cheat)
+    if (!cheatUsed) {
+      gameCenter.submitScore(Math.floor(score))
+      gameCenter.unlock(GC_ACHIEVEMENTS.firstVictory)
+      if (continues === 0) gameCenter.unlock(GC_ACHIEVEMENTS.noContinues)
+      if (timeMs > 0 && timeMs < 5 * 60 * 1000) gameCenter.unlock(GC_ACHIEVEMENTS.speedRun)
+      const charsWon = localProgress.recordVictory(character)
+      if (['werdum', 'dida', 'thor'].every(c => charsWon.includes(c))) {
+        gameCenter.unlock(GC_ACHIEVEMENTS.allChars)
+      }
+    }
+
     let saveOk = false
     try {
       if (cheatUsed) {

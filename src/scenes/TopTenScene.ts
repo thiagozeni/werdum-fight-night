@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 import { getTopTen, ScoreEntry } from '../lib/leaderboard'
+import { gameCenter } from '../systems/GameCenterBridge'
 
 export class TopTenScene extends Phaser.Scene {
   private navigating = false
@@ -29,6 +30,41 @@ export class TopTenScene extends Phaser.Scene {
       event.stopPropagation()
       this.goToTitle()
     })
+
+    // Toggle Multiplataforma / Game Center (canto superior direito)
+    // Em iOS mostra os dois botões, em Android/web só o ativo
+    const toggleBtnStyle = {
+      fontSize: '20px',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 4,
+      padding: { x: 14, y: 8 },
+    }
+    const activeColors  = { color: '#000000', backgroundColor: '#f3c204' }
+    const inactiveColors = { color: '#aaaaaa', backgroundColor: '#1a1a1a' }
+
+    const multiBtn = this.add.text(
+      1860,
+      60,
+      'MULTIPLATAFORMA',
+      { ...toggleBtnStyle, ...activeColors },
+    ).setOrigin(1, 0.5).setDepth(3).setInteractive({ useHandCursor: true })
+
+    if (gameCenter.isAvailable()) {
+      multiBtn.setStyle({ ...toggleBtnStyle, ...activeColors })
+
+      const gcBtn = this.add.text(
+        multiBtn.x - multiBtn.width - 12,
+        60,
+        'GAME CENTER',
+        { ...toggleBtnStyle, ...inactiveColors },
+      ).setOrigin(1, 0.5).setDepth(3).setInteractive({ useHandCursor: true })
+
+      gcBtn.on('pointerdown', () => {
+        sound.select()
+        gameCenter.showLeaderboard()
+      })
+    }
 
     // Título
     this.add.text(960, 70, 'TOP 10', {

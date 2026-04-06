@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
+import { gameCenter } from '../systems/GameCenterBridge'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -240,6 +241,11 @@ export class BootScene extends Phaser.Scene {
   create() {
     // Inicializa referência Phaser no SoundManager (uma única vez para o jogo todo)
     sound.init(this)
+
+    // Tenta sign-in no Game Center (no-op em Android/web)
+    if (gameCenter.isAvailable()) {
+      gameCenter.signIn().catch(() => { /* silencioso */ })
+    }
 
     // Gerar textura de partícula em tempo de execução
     const gfx = this.add.graphics()

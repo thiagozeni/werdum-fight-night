@@ -9,6 +9,7 @@ import { spawnDamageNumber } from '../ui/DamageNumber'
 import { sound } from '../systems/SoundManager'
 import { saveHighScore } from '../systems/HighScore'
 import { haptics, notifications, appLifecycle } from '../systems/NativeBridge'
+import { gameCenter, GC_ACHIEVEMENTS } from '../systems/GameCenterBridge'
 
 export const RING = {
   top: 650, bottom: 1000,
@@ -79,6 +80,8 @@ export class GameScene extends Phaser.Scene {
   private waveEndTimer = 0
   private cheatBuffer = ''
   private cheatUsed = false
+  private waveDamageTaken = false
+  private maxComboReached = 0
 
   // (bgVideo removido — usando imagem estática como cenário)
 
@@ -103,6 +106,8 @@ export class GameScene extends Phaser.Scene {
     this.spawnQueue       = []
     this.cheatBuffer      = ''
     this.cheatUsed        = false
+    this.waveDamageTaken  = false
+    this.maxComboReached  = 0
     this.registry.remove('cheatUsed')
     this.spawnTimer       = 0
 
@@ -296,6 +301,9 @@ export class GameScene extends Phaser.Scene {
     // Fim de wave
     if (this.waveActive && this.spawnQueue.length === 0 && this.enemies.length === 0) {
       this.waveActive = false
+      if (!this.waveDamageTaken && !this.cheatUsed) {
+        gameCenter.unlock(GC_ACHIEVEMENTS.flawlessWave)
+      }
       if (this.currentWave >= WAVES.length) {
         // Última wave — dispara vitória imediatamente, sem delay
         if (!this.isGameOver) this.startNextWave()
@@ -378,6 +386,10 @@ export class GameScene extends Phaser.Scene {
           const earned = this.addScore(ENEMY_SCORE[enemy.enemyType])
           this.spawnScorePopup(enemy.x, enemy.y, earned)
           this.enemiesDefeated++
+          // Game Center: achievements de boss
+          if (enemy.enemyType === 'boss_coach') gameCenter.unlock(GC_ACHIEVEMENTS.bossCoach)
+          else if (enemy.enemyType === 'boss_son') gameCenter.unlock(GC_ACHIEVEMENTS.bossSmoKing)
+          else if (enemy.enemyType === 'boss_coco') gameCenter.unlock(GC_ACHIEVEMENTS.bossCoco)
         }
         hitAny = true
       }
@@ -388,9 +400,12 @@ export class GameScene extends Phaser.Scene {
       this.comboCount++
       this.comboTimer = this.COMBO_WINDOW
       this.hud.showCombo(this.comboCount)
+      if (this.comboCount > this.maxComboReached) this.maxComboReached = this.comboCount
       if (this.comboCount === 3 || this.comboCount === 5 || this.comboCount === 10) {
         haptics.success()
       }
+      if (this.comboCount === 10) gameCenter.unlock(GC_ACHIEVEMENTS.combo10)
+      if (this.comboCount === 20) gameCenter.unlock(GC_ACHIEVEMENTS.combo20)
     }
   }
 
@@ -494,6 +509,7 @@ export class GameScene extends Phaser.Scene {
 
     this.playerHP = Math.max(0, this.playerHP - dmg)
     this.hud.updatePlayerHP(this.playerHP, this.playerMaxHP)
+    if (!this.player.isBlocking) this.waveDamageTaken = true
 
     if (!this.player.isBlocking && (enemy.damageToPlayer >= 25 || this.playerHP <= 0)) {
       this.player.knockdown()
@@ -546,6 +562,7 @@ export class GameScene extends Phaser.Scene {
 
     this.spawnTimer  = 800
     this.waveActive  = true
+    this.waveDamageTaken = false
 
     if (this.currentWave > 1) {
       this.playerHP = Math.min(this.playerMaxHP, this.playerHP + this.playerMaxHP * 0.15)
