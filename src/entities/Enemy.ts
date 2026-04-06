@@ -22,7 +22,7 @@ const STATS: Record<EnemyType, EnemyStats> = {
   chair:      { hp: 50,  speed: 65,  damageToPlayer: 18, damageToWand: 20, scale: 0.90 },
   boss_coach: { hp: 180, speed: 55,  damageToPlayer: 18, damageToWand: 20, scale: 0.90, isBoss: true },
   boss_son:   { hp: 280, speed: 85,  damageToPlayer: 25, damageToWand: 28, scale: 0.90, isBoss: true },
-  boss_coco:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true, sizeScale: 1.12 },
+  boss_coco:  { hp: 420, speed: 95,  damageToPlayer: 35, damageToWand: 40, scale: 0.90, isBoss: true, sizeScale: 1.21 },
 }
 
 // Personagens com spritesheets de animação completos

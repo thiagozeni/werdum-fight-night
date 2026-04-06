@@ -65,7 +65,7 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('werdum-idle-sheet',      'sprites/werdum/werdum-idle-sheet.png',      { frameWidth: 160, frameHeight: 240, endFrame: 7  })
     this.load.spritesheet('werdum-walk-sheet',       'sprites/werdum/werdum-walk-sheet.png',       { frameWidth: 160, frameHeight: 240, endFrame: 35 })
     this.load.spritesheet('werdum-punch-sheet',     'sprites/werdum/werdum-punch-sheet.png',     { frameWidth: 320, frameHeight: 240, endFrame: 24 })
-    this.load.spritesheet('werdum-kick-sheet',      'sprites/werdum/werdum-kick-sheet.png',      { frameWidth: 384, frameHeight: 240, endFrame: 24 })
+    this.load.spritesheet('werdum-kick-sheet',      'sprites/werdum/werdum-kick-sheet.png',      { frameWidth: 384, frameHeight: 240, endFrame: 13 })
     this.load.spritesheet('werdum-hit-sheet',       'sprites/werdum/werdum-hit-sheet.png',       { frameWidth: 224, frameHeight: 240, endFrame: 24 })
     this.load.spritesheet('werdum-block-sheet',     'sprites/werdum/werdum-block-padded-sheet.png', { frameWidth: 192, frameHeight: 240, endFrame: 24 })
     this.load.spritesheet('werdum-knockdown-sheet', 'sprites/werdum/werdum-knockdown-sheet.png', { frameWidth: 160, frameHeight: 240, endFrame: 35 })

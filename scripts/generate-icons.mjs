@@ -5,26 +5,13 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const SOURCE = join(ROOT, 'public/imgs/elementos/logo-novo.png');
+const SOURCE = join(ROOT, 'store-assets/_source-icon-master.png');
 
-// Garante fundo preto sólido (iOS não aceita transparência no ícone)
+// Source master já vem 1024×1024 com fundo preto e logo enquadrado — só faz resize
 async function iconWithBg(size) {
-  return sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 1 },
-    },
-  })
-    .composite([
-      {
-        input: await sharp(SOURCE)
-          .resize(Math.round(size * 0.85), Math.round(size * 0.85), { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-          .toBuffer(),
-        gravity: 'centre',
-      },
-    ])
+  return sharp(SOURCE)
+    .resize(size, size, { fit: 'cover' })
+    .flatten({ background: { r: 0, g: 0, b: 0 } })
     .png();
 }
 
@@ -183,5 +170,14 @@ for (const { dir, w, h } of androidSplashDensities) {
   await (await splashWithBg(w, h)).toFile(join(outDir, 'splash.png'));
   console.log(`  ✓ ${dir}/splash.png (${w}×${h})`);
 }
+
+// ──────────────────────────────────────────────
+// Web favicon + apple-touch-icon
+// ──────────────────────────────────────────────
+console.log('\nGerando favicon e apple-touch-icon...');
+await (await iconWithBg(64)).toFile(join(ROOT, 'public/imgs/elementos/favicon.png'));
+console.log('  ✓ public/imgs/elementos/favicon.png (64×64)');
+await (await iconWithBg(180)).toFile(join(ROOT, 'public/imgs/apple-touch-icon.png'));
+console.log('  ✓ public/imgs/apple-touch-icon.png (180×180)');
 
 console.log('\n✅ Todos os ícones e splashes gerados com sucesso!');

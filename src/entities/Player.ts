@@ -190,10 +190,10 @@ export class Player extends Phaser.GameObjects.Sprite {
     ac.create({ key: `${k}-run`,  frames: ac.generateFrameNumbers(cfg.moveSheet,     { start: 0, end: cfg.moveEnd }), frameRate: 14, repeat: -1 })
 
     // Animações de combate (só para personagens com sprites completos)
-    const COMBAT_CFG: Record<string, { hitEnd: number; blockStart: number; blockEnd: number; punchFps: number; jabEnd: number; knockdownEnd: number }> = {
-      werdum: { hitEnd: 24, blockStart: 8,  blockEnd: 18, punchFps: 26, jabEnd: 9, knockdownEnd: 35 },
-      dida:   { hitEnd: 15, blockStart: 0,  blockEnd: 8,  punchFps: 21, jabEnd: 7, knockdownEnd: 35 },
-      thor:   { hitEnd: 35, blockStart: 0,  blockEnd: 15, punchFps: 26, jabEnd: 8, knockdownEnd: 35 },
+    const COMBAT_CFG: Record<string, { hitEnd: number; blockStart: number; blockEnd: number; punchFps: number; jabEnd: number; kickEnd: number; knockdownEnd: number }> = {
+      werdum: { hitEnd: 24, blockStart: 8,  blockEnd: 18, punchFps: 26, jabEnd: 9, kickEnd: 12, knockdownEnd: 35 },
+      dida:   { hitEnd: 15, blockStart: 0,  blockEnd: 8,  punchFps: 21, jabEnd: 7, kickEnd: 24, knockdownEnd: 35 },
+      thor:   { hitEnd: 35, blockStart: 0,  blockEnd: 15, punchFps: 26, jabEnd: 8, kickEnd: 24, knockdownEnd: 35 },
     }
     const cc = COMBAT_CFG[k] ?? COMBAT_CFG['werdum']
 
@@ -202,7 +202,7 @@ export class Player extends Phaser.GameObjects.Sprite {
       ac.create({ key: `${k}-punch-combo`, frames: ac.generateFrameNumbers(`${k}-punch-sheet`, { start: 0, end: 24       }), frameRate: cc.punchFps, repeat: 0 })
     }
     if (this.scene.textures.exists(`${k}-kick-sheet`))
-      ac.create({ key: `${k}-kick`,      frames: ac.generateFrameNumbers(`${k}-kick-sheet`,      { start: 0, end: 24          }), frameRate: 22, repeat: 0  })
+      ac.create({ key: `${k}-kick`,      frames: ac.generateFrameNumbers(`${k}-kick-sheet`,      { start: 0, end: cc.kickEnd  }), frameRate: 22, repeat: 0  })
     if (this.scene.textures.exists(`${k}-hit-sheet`))
       ac.create({ key: `${k}-hit`,       frames: ac.generateFrameNumbers(`${k}-hit-sheet`,       { start: 0, end: cc.hitEnd   }), frameRate: 22, repeat: 0  })
     if (this.scene.textures.exists(`${k}-block-sheet`))

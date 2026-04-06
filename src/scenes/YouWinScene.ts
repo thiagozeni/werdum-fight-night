@@ -236,10 +236,12 @@ export class YouWinScene extends Phaser.Scene {
 
   private showSharePrompt(playerName: string, score: number): Promise<void> {
     return new Promise(resolve => {
-      const { width } = this.scale
-
       // Limpa texto de status anterior
       this.statusText?.destroy()
+
+      // Posicionado 40px abaixo do PRESS START (y=873), centralizado em x=502
+      const blockCenterX = 502
+      const blockY = 965
 
       const btnStyle = {
         fontSize: '28px', color: '#000000',
@@ -254,10 +256,10 @@ export class YouWinScene extends Phaser.Scene {
         stroke: '#000000', strokeThickness: 3,
       }
 
-      const shareBtn = this.add.text(width / 2 - 180, 690, 'SHARE', btnStyle)
+      const shareBtn = this.add.text(blockCenterX - 110, blockY, 'SHARE', btnStyle)
         .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
 
-      const skipBtn = this.add.text(width / 2 + 180, 690, 'SKIP >', skipStyle)
+      const skipBtn = this.add.text(blockCenterX + 130, blockY, 'SKIP >', skipStyle)
         .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
 
       const cleanup = () => {
