@@ -625,14 +625,83 @@ export class GameScene extends Phaser.Scene {
     haptics.success()
     this.saveHighScore()
 
+    const selectedChar = (this.registry.get('selectedChar') as string) ?? 'werdum'
+
     this.registry.set('youWinScore', this.score)
     this.registry.set('youWinKills', this.enemiesDefeated)
     this.registry.set('youWinTime',  this.gameTimerMs)
+    this.registry.set('totalWaves',  WAVES.length)
 
-    this.cameras.main.fadeOut(400, 0, 0, 0)
-    this.cameras.main.once('camerafadeoutcomplete', () =>
-      this.scene.start('YouWinScene'),
-    )
+    this.playVictoryTransition(selectedChar)
+  }
+
+  private playVictoryTransition(selectedChar: string) {
+    const { width, height } = this.scale
+
+    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x05070a, 0)
+      .setDepth(1200)
+      .setScrollFactor(0)
+    const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xf3c204, 0)
+      .setDepth(1201)
+      .setScrollFactor(0)
+
+    const title = this.add.text(width / 2, height / 2 - 58, 'RING CLEAR', {
+      fontSize: '56px',
+      color: '#fff3bf',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 10,
+    }).setOrigin(0.5).setDepth(1202).setScrollFactor(0).setAlpha(0).setScale(0.92)
+
+    const subtitle = this.add.text(width / 2, height / 2 + 18, 'MISSION COMPLETE', {
+      fontSize: '24px',
+      color: '#f3c204',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 6,
+    }).setOrigin(0.5).setDepth(1202).setScrollFactor(0).setAlpha(0)
+
+    if (selectedChar === 'dida') this.player.playKickAnim()
+    else this.player.playPunchAnim()
+    this.player.setFlipX(false)
+
+    this.cameras.main.flash(180, 255, 243, 191, false)
+    this.cameras.main.shake(180, 0.003)
+
+    this.tweens.add({
+      targets: flash,
+      alpha: 0.22,
+      duration: 140,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    })
+    this.tweens.add({
+      targets: overlay,
+      alpha: 0.5,
+      duration: 260,
+      ease: 'Quad.easeOut',
+    })
+    this.tweens.add({
+      targets: [title, subtitle],
+      alpha: 1,
+      y: '-=16',
+      scale: 1,
+      duration: 320,
+      ease: 'Back.easeOut',
+      stagger: 40,
+    })
+
+    this.time.delayedCall(940, () => {
+      this.cameras.main.fadeOut(420, 0, 0, 0)
+      this.cameras.main.once('camerafadeoutcomplete', () =>
+        this.scene.start('YouWinScene', {
+          fromGameScene: true,
+          selectedChar,
+          finalWave: this.currentWave,
+          totalWaves: WAVES.length,
+        }),
+      )
+    })
   }
 
   // ── High Score (localStorage) ────────────────────────────
