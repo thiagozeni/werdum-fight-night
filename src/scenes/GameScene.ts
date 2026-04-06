@@ -77,6 +77,8 @@ export class GameScene extends Phaser.Scene {
   private spawnInterval = 1500
   private waveActive = false
   private waveEndTimer = 0
+  private cheatBuffer = ''
+  private cheatUsed = false
 
   // (bgVideo removido — usando imagem estática como cenário)
 
@@ -99,6 +101,9 @@ export class GameScene extends Phaser.Scene {
     this.waveActive       = false
     this.waveEndTimer     = 0
     this.spawnQueue       = []
+    this.cheatBuffer      = ''
+    this.cheatUsed        = false
+    this.registry.remove('cheatUsed')
     this.spawnTimer       = 0
 
     const continueFromWave = this.registry.get('continueFromWave') as number | undefined
@@ -190,6 +195,20 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard!.on('keydown-M',   () => {
       const muted = sound.toggleMute()
       this.hud.showMuteStatus(muted)
+    })
+
+    // Cheat code escondido: digite "coco" durante a gameplay para pular para a wave 12.
+    // O resultado da partida não será salvo no top 10.
+    this.input.keyboard!.off('keydown')
+    this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
+      if (this.isGameOver || this.isPaused) return
+      const key = event.key
+      if (key.length !== 1) return
+      this.cheatBuffer = (this.cheatBuffer + key.toLowerCase()).slice(-4)
+      if (this.cheatBuffer === 'coco') {
+        this.cheatBuffer = ''
+        this.skipToFinalWave()
+      }
     })
 
     // Suporte a "continue" — retoma da wave em que o jogador perdeu
@@ -488,6 +507,26 @@ export class GameScene extends Phaser.Scene {
   }
 
   // ── Waves ────────────────────────────────────────────────
+
+  private skipToFinalWave() {
+    if (this.cheatUsed || this.isGameOver) return
+    this.cheatUsed = true
+    this.registry.set('cheatUsed', true)
+
+    // Limpa estado da wave atual
+    for (const e of this.enemies) {
+      try { e.destroy() } catch { /* noop */ }
+    }
+    this.enemies     = []
+    this.spawnQueue  = []
+    this.waveActive  = false
+    this.waveEndTimer = 0
+    this.spawnTimer  = 0
+
+    // Próxima wave a iniciar será a 12 (boss final)
+    this.currentWave = WAVES.length - 1
+    this.startNextWave()
+  }
 
   private startNextWave() {
     this.currentWave++

@@ -188,10 +188,16 @@ export class YouWinScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 3,
     }).setDepth(5)
 
+    const cheatUsed = this.registry.get('cheatUsed') === true
     let saveOk = false
     try {
-      await saveScore({ player_name: name, character, continues: Math.floor(continues), time_ms: Math.floor(timeMs / 1000) * 1000, score: Math.floor(score) })
-      saveOk = true
+      if (cheatUsed) {
+        this.statusText.setText('CHEAT — NÃO SALVO').setColor('#f3c204')
+        await new Promise(r => this.time.delayedCall(800, r))
+      } else {
+        await saveScore({ player_name: name, character, continues: Math.floor(continues), time_ms: Math.floor(timeMs / 1000) * 1000, score: Math.floor(score) })
+        saveOk = true
+      }
     } catch (e) {
       console.error('[Leaderboard] Erro ao salvar:', e)
       this.statusText.setText('ERRO AO SALVAR PONTUAÇÃO')
@@ -222,6 +228,7 @@ export class YouWinScene extends Phaser.Scene {
     this.registry.remove('gameOverScore')
     this.registry.remove('gameOverTime')
     this.registry.remove('continueCount')
+    this.registry.remove('cheatUsed')
 
     this.cameras.main.fadeOut(400, 0, 0, 0)
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TopTenScene'))
