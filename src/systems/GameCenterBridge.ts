@@ -69,12 +69,14 @@ export const gameCenter = {
   },
 
   async showLeaderboard(): Promise<void> {
-    if (!isIOSNative) return
-    try {
-      await GameCenter.showLeaderboard({ leaderboardId: GC_LEADERBOARD_GLOBAL })
-    } catch (e) {
-      console.warn('[GameCenter] showLeaderboard falhou:', e)
+    if (!isIOSNative) throw new Error('Game Center disponível apenas em iOS')
+    // Garante autenticação antes de tentar abrir a UI nativa
+    const authed = await this.isAuthenticated()
+    if (!authed) {
+      const ok = await this.signIn()
+      if (!ok) throw new Error('Não foi possível autenticar no Game Center')
     }
+    await GameCenter.showLeaderboard({ leaderboardId: GC_LEADERBOARD_GLOBAL })
   },
 
   async unlock(achievementId: string): Promise<void> {

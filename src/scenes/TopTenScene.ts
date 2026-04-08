@@ -58,11 +58,32 @@ export class TopTenScene extends Phaser.Scene {
         60,
         'GAME CENTER',
         { ...toggleBtnStyle, ...inactiveColors },
-      ).setOrigin(1, 0.5).setDepth(3).setInteractive({ useHandCursor: true })
+      ).setOrigin(1, 0.5).setDepth(3)
 
-      gcBtn.on('pointerdown', () => {
+      // Hit area expandida — touch em iPad sofre com áreas apertadas
+      const gcPad = 24
+      gcBtn.setInteractive(
+        new Phaser.Geom.Rectangle(-gcPad, -gcPad, gcBtn.width + gcPad * 2, gcBtn.height + gcPad * 2),
+        Phaser.Geom.Rectangle.Contains,
+      )
+      gcBtn.input!.cursor = 'pointer'
+
+      gcBtn.on('pointerdown', async () => {
         sound.select()
-        gameCenter.showLeaderboard()
+        try {
+          let authed = await gameCenter.isAuthenticated()
+          if (!authed) {
+            authed = await gameCenter.signIn()
+          }
+          if (!authed) {
+            this.showGcToast('FAÇA LOGIN NO GAME CENTER\nEM AJUSTES → GAME CENTER')
+            return
+          }
+          await gameCenter.showLeaderboard()
+        } catch (e: any) {
+          console.warn('[GameCenter] tap falhou:', e)
+          this.showGcToast(`GAME CENTER INDISPONÍVEL\n${e?.message ?? ''}`.trim())
+        }
       })
     }
 
@@ -175,6 +196,36 @@ export class TopTenScene extends Phaser.Scene {
       this.input.keyboard!.on('keydown-SPACE',  () => this.goToTitle())
       this.input.keyboard!.on('keydown-ENTER',  () => this.goToTitle())
       this.input.keyboard!.on('keydown-ESCAPE', () => this.goToTitle())
+    })
+  }
+
+  private showGcToast(message: string) {
+    const toast = this.add.text(960, 990, message, {
+      fontSize: '22px',
+      color: '#ffffff',
+      align: 'center',
+      fontFamily: '"Press Start 2P", monospace',
+      stroke: '#000000',
+      strokeThickness: 5,
+      backgroundColor: '#aa0000',
+      padding: { x: 18, y: 12 },
+    }).setOrigin(0.5).setDepth(10).setAlpha(0)
+
+    this.tweens.add({
+      targets: toast,
+      alpha: 1,
+      duration: 200,
+      yoyo: false,
+      hold: 3000,
+      onComplete: () => {
+        this.tweens.add({
+          targets: toast,
+          alpha: 0,
+          duration: 400,
+          delay: 3000,
+          onComplete: () => toast.destroy(),
+        })
+      },
     })
   }
 

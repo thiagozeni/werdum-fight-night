@@ -10,6 +10,7 @@ import { sound } from '../systems/SoundManager'
 import { saveHighScore } from '../systems/HighScore'
 import { haptics, notifications, appLifecycle } from '../systems/NativeBridge'
 import { gameCenter, GC_ACHIEVEMENTS } from '../systems/GameCenterBridge'
+import { prepareIOSVideo } from '../utils/iosVideo'
 
 export const RING = {
   top: 650, bottom: 1000,
@@ -124,6 +125,7 @@ export class GameScene extends Phaser.Scene {
     const bgVideo = this.add.video(960, 540, 'game-bg-video')
     bgVideo.setDepth(0)
     bgVideo.on('play', () => bgVideo.setDisplaySize(1920, 1080))
+    prepareIOSVideo(bgVideo)
     bgVideo.play(true)
 
     // Ringue estático sobreposto ao vídeo

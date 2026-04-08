@@ -15,18 +15,29 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "showAchievements", returnType: CAPPluginReturnPromise),
     ]
 
+    // Guarda contra double-resolve: o authenticateHandler pode disparar
+    // múltiplas vezes durante o ciclo de vida do app, mas CAPPluginCall só
+    // pode ser resolvido uma vez.
+    private var signInResolved = false
+
     @objc public func signIn(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            self.signInResolved = false
             let player = GKLocalPlayer.local
             player.authenticateHandler = { vc, error in
                 if let vc = vc {
+                    CAPLog.print("[GameCenter] presenting auth view controller")
                     self.bridge?.viewController?.present(vc, animated: true, completion: nil)
                     return
                 }
+                if self.signInResolved { return }
+                self.signInResolved = true
                 if let error = error {
+                    CAPLog.print("[GameCenter] signIn error: \(error.localizedDescription)")
                     call.reject(error.localizedDescription)
                     return
                 }
+                CAPLog.print("[GameCenter] signIn success: authenticated=\(player.isAuthenticated)")
                 call.resolve([
                     "authenticated": player.isAuthenticated,
                     "displayName": player.displayName,
@@ -82,6 +93,16 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc public func showLeaderboard(_ call: CAPPluginCall) {
         let leaderboardId = call.getString("leaderboardId") ?? ""
         DispatchQueue.main.async {
+            guard GKLocalPlayer.local.isAuthenticated else {
+                CAPLog.print("[GameCenter] showLeaderboard rejected: not authenticated")
+                call.reject("not authenticated")
+                return
+            }
+            guard let presenter = self.bridge?.viewController else {
+                CAPLog.print("[GameCenter] showLeaderboard rejected: no view controller")
+                call.reject("no view controller available")
+                return
+            }
             let vc: GKGameCenterViewController
             if #available(iOS 14.0, *), !leaderboardId.isEmpty {
                 vc = GKGameCenterViewController(
@@ -99,7 +120,7 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
             vc.gameCenterDelegate = GameCenterDismissDelegate.shared
-            self.bridge?.viewController?.present(vc, animated: true, completion: nil)
+            presenter.present(vc, animated: true, completion: nil)
             call.resolve()
         }
     }

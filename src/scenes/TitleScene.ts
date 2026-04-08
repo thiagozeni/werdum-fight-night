@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
+import { prepareIOSVideo } from '../utils/iosVideo'
 
 export class TitleScene extends Phaser.Scene {
   private navigating = false
@@ -17,6 +18,7 @@ export class TitleScene extends Phaser.Scene {
     // Vídeo de fundo em loop
     this.bgVideo = this.add.video(width / 2, height / 2, 'intro-video')
     this.bgVideo.setDepth(0)
+    prepareIOSVideo(this.bgVideo)
     this.bgVideo.play(true)
 
     // Ajusta escala mantendo proporção — cobre a tela sem distorcer
