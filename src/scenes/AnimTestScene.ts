@@ -255,7 +255,7 @@ export class AnimTestScene extends Phaser.Scene {
     }).setOrigin(0.5, 0)
 
     // Botão voltar
-    const back = this.add.text(40, 28, '← VOLTAR', {
+    const back = this.add.text(40, 28, '< VOLTAR', {
       fontSize: '18px', color: '#aaccff', fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 3,
     }).setOrigin(0, 0).setInteractive({ useHandCursor: true })

@@ -10,7 +10,7 @@ import { sound } from '../systems/SoundManager'
 import { saveHighScore } from '../systems/HighScore'
 import { haptics, notifications, appLifecycle } from '../systems/NativeBridge'
 import { gameCenter, GC_ACHIEVEMENTS } from '../systems/GameCenterBridge'
-import { prepareIOSVideo } from '../utils/iosVideo'
+import { prepareIOSVideo, padInteractive } from '../utils/iosVideo'
 
 export const RING = {
   top: 650, bottom: 1000,
@@ -168,7 +168,7 @@ export class GameScene extends Phaser.Scene {
         stroke: '#000000',
         strokeThickness: 4,
       }).setOrigin(0.5, 0).setDepth(110).setScrollFactor(0).setAlpha(0.6)
-        .setInteractive({ useHandCursor: true })
+      padInteractive(pauseBtn, 32)
       pauseBtn.on('pointerdown', () => this.togglePause())
     }
 
@@ -621,7 +621,8 @@ export class GameScene extends Phaser.Scene {
         fontSize: '24px', color: '#ffffff',
         fontFamily: '"Press Start 2P", monospace',
         stroke: '#000000', strokeThickness: 5,
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      }).setOrigin(0.5)
+      padInteractive(txt)
       txt.on('pointerdown', cb)
       txt.on('pointerover', () => txt.setColor('#f3c204'))
       txt.on('pointerout',  () => txt.setColor('#ffffff'))

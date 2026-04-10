@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 import { getHighScore } from '../systems/HighScore'
+import { padInteractive } from '../utils/iosVideo'
 
 const CHARACTERS = [
   { key: 'werdum', name: 'WERDUM', sv: 'werdum-sv', perfil: 'werdum-perfil', previewY: 119 },
@@ -129,11 +130,12 @@ export class SelectScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(4)
 
     // Botão VOLTAR
-    const back = this.add.text(60, 60, '← VOLTAR', {
+    const back = this.add.text(60, 60, '< VOLTAR', {
       fontSize: '28px', color: '#ffffff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2)
+    padInteractive(back)
     back.on('pointerdown',  (_p: any, _lx: number, _ly: number, event: any) => {
       event.stopPropagation()
       this.goBack()

@@ -3,6 +3,7 @@ import { sound } from '../systems/SoundManager'
 import { saveScore } from '../lib/leaderboard'
 import { nativeShare, haptics } from '../systems/NativeBridge'
 import { gameCenter, GC_ACHIEVEMENTS, localProgress } from '../systems/GameCenterBridge'
+import { padInteractive } from '../utils/iosVideo'
 
 export class YouWinScene extends Phaser.Scene {
   private navigating = false
@@ -94,7 +95,8 @@ export class YouWinScene extends Phaser.Scene {
       fontSize: '44px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(2)
+    padInteractive(startText)
 
     this.tweens.add({
       targets: startText, alpha: 0.2, duration: 600,
@@ -271,10 +273,12 @@ export class YouWinScene extends Phaser.Scene {
       }
 
       const shareBtn = this.add.text(blockCenterX - 110, blockY, 'SHARE', btnStyle)
-        .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
+        .setOrigin(0.5).setDepth(10)
+      padInteractive(shareBtn)
 
       const skipBtn = this.add.text(blockCenterX + 130, blockY, 'SKIP >', skipStyle)
-        .setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true })
+        .setOrigin(0.5).setDepth(10)
+      padInteractive(skipBtn)
 
       const cleanup = () => {
         shareBtn.destroy()

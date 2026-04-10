@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
 import { getTopTen, ScoreEntry } from '../lib/leaderboard'
 import { gameCenter } from '../systems/GameCenterBridge'
+import { padInteractive } from '../utils/iosVideo'
 
 export class TopTenScene extends Phaser.Scene {
   private navigating = false
@@ -21,11 +22,12 @@ export class TopTenScene extends Phaser.Scene {
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(1)
 
     // Botão VOLTAR
-    const back = this.add.text(60, 60, '← VOLTAR', {
+    const back = this.add.text(60, 60, '< VOLTAR', {
       fontSize: '28px', color: '#ffffff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2)
+    padInteractive(back)
     back.on('pointerdown', (_p: any, _lx: number, _ly: number, event: any) => {
       event.stopPropagation()
       this.goToTitle()
@@ -48,7 +50,8 @@ export class TopTenScene extends Phaser.Scene {
       60,
       'MULTIPLATAFORMA',
       { ...toggleBtnStyle, ...activeColors },
-    ).setOrigin(1, 0.5).setDepth(3).setInteractive({ useHandCursor: true })
+    ).setOrigin(1, 0.5).setDepth(3)
+    padInteractive(multiBtn)
 
     if (gameCenter.isAvailable()) {
       multiBtn.setStyle({ ...toggleBtnStyle, ...activeColors })
@@ -180,7 +183,8 @@ export class TopTenScene extends Phaser.Scene {
       fontSize: '36px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 5,
-    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(2)
+    padInteractive(startText)
 
     this.tweens.add({
       targets: startText, alpha: 0.2, duration: 600,

@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
+import { padInteractive } from '../utils/iosVideo'
 
 export class GameOverContinueScene extends Phaser.Scene {
   private navigating = false
@@ -45,14 +46,16 @@ export class GameOverContinueScene extends Phaser.Scene {
       fontSize: '40px', color: '#f3c204',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 10,
-    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(2)
+    padInteractive(this.yesText)
 
     // NO
     this.noText = this.add.text(542, 742, 'NO', {
       fontSize: '40px', color: '#e4e4e4',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 10,
-    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(2)
+    padInteractive(this.noText)
 
     // Cursor ">"
     this.cursorArrow = this.add.text(210, 742, '>', {

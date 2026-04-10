@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: '3 Contra Todos',
   webDir: 'dist',
   ios: {
-    contentInset: 'always',
+    contentInset: 'never',
   },
   android: {
     backgroundColor: '#000000',

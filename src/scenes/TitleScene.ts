@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
-import { prepareIOSVideo } from '../utils/iosVideo'
+import { prepareIOSVideo, padInteractive } from '../utils/iosVideo'
 
 export class TitleScene extends Phaser.Scene {
   private navigating = false
@@ -66,7 +66,8 @@ export class TitleScene extends Phaser.Scene {
       fontSize: '30px', color: '#ffffff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 5,
-    }).setOrigin(0.5).setDepth(3).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(3)
+    padInteractive(top10)
     top10.on('pointerover',  () => top10.setColor('#f3c204'))
     top10.on('pointerout',   () => top10.setColor('#ffffff'))
     top10.on('pointerdown',  () => this.goToTopTen())
@@ -124,6 +125,10 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private tryFullscreen() {
+    // No Capacitor (app nativo), não chamar Fullscreen API — já roda em tela cheia
+    const cap = (window as any).Capacitor
+    if (cap?.isNativePlatform?.()) return
+
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1
     if (!isMobile) return
     if (document.fullscreenElement) return

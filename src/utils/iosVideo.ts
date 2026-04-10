@@ -1,4 +1,27 @@
 /**
+ * iosVideo — utilitários iOS: vídeo autoplay e hit areas expandidas para touch.
+ *
+ * padInteractive — expande a área de toque de qualquer Text/Rectangle em `pad` px
+ * em todas as direções, evitando toques perdidos em dispositivos iOS (iPhone/iPad).
+ */
+
+/**
+ * Aplica setInteractive com padding extra e cursor pointer.
+ * Use no lugar de `.setInteractive({ useHandCursor: true })` em botões touch.
+ */
+export function padInteractive<T extends Phaser.GameObjects.Text | Phaser.GameObjects.Rectangle>(
+  obj: T,
+  pad = 24,
+): T {
+  obj.setInteractive(
+    new Phaser.Geom.Rectangle(-pad, -pad, obj.width + pad * 2, obj.height + pad * 2),
+    Phaser.Geom.Rectangle.Contains,
+  )
+  obj.input!.cursor = 'pointer'
+  return obj
+}
+
+/**
  * iosVideo — utilitário para garantir que vídeos tocam em iOS WKWebView (Capacitor).
  *
  * iOS é rígido com autoplay: mesmo com `noAudio: true` no Phaser loader, o

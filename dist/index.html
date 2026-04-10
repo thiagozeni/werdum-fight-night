@@ -94,7 +94,7 @@
         #rotate-msg { display: flex !important; }
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-Ba6DebYQ.js"></script>
+    <script type="module" crossorigin src="./assets/index-BeVTOkYG.js"></script>
   </head>
   <body>
     <div id="loader-overlay" style="
@@ -103,11 +103,29 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
       transition: opacity 0.5s ease;
     ">
-      <video autoplay loop muted playsinline style="
+      <video id="loader-video" autoplay loop muted playsinline webkit-playsinline style="
         width: 60%; height: 60%; object-fit: contain;
       ">
-        <source src="videos/loader.m4v" type="video/mp4">
+        <source src="videos/loader.mp4" type="video/mp4">
       </video>
+      <script>
+        // Fallback: se o vídeo do loader falhar (ex: restrições de autoplay no WKWebView),
+        // tenta forçar o play; se ainda falhar, simplesmente esconde o vídeo.
+        (function() {
+          var v = document.getElementById('loader-video');
+          if (!v) return;
+          v.addEventListener('error', function() { v.style.display = 'none'; });
+          // Garante autoplay em contextos restritivos (Capacitor iOS)
+          var playAttempt = v.play();
+          if (playAttempt && playAttempt.catch) {
+            playAttempt.catch(function() {
+              // Se o play falhou, tenta novamente muted (reforço)
+              v.muted = true;
+              v.play().catch(function() { v.style.display = 'none'; });
+            });
+          }
+        })();
+      </script>
 
       <!-- Área fixa abaixo do vídeo — barra e botão ocupam o mesmo espaço -->
       <div style="width: 60%; height: 52px; position: relative; display: flex; align-items: center;">
@@ -200,8 +218,9 @@
             }
           }
 
+          var isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
           var isAndroid = /Android/i.test(navigator.userAgent)
-          if (isAndroid) {
+          if (isAndroid && !isCapacitor) {
             try {
               var el = document.documentElement
               var fsPromise = el.requestFullscreen ? el.requestFullscreen()
@@ -247,6 +266,8 @@
     </div>
     <script>
       (function() {
+        var isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+        if (isCapacitor) return // Dentro do app nativo, nunca mostra banner PWA
         var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
         var isStandalone = window.navigator.standalone === true
         if (isIOS && !isStandalone) {

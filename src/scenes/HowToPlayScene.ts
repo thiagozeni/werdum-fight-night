@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { sound } from '../systems/SoundManager'
+import { padInteractive } from '../utils/iosVideo'
 
 export class HowToPlayScene extends Phaser.Scene {
   private navigating = false
@@ -60,7 +61,8 @@ export class HowToPlayScene extends Phaser.Scene {
       fontSize: '50px', color: '#aaddff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(2)
+    padInteractive(skip)
 
     this.tweens.add({ targets: skip, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 })
     skip.on('pointerdown', (_p: any, _lx: number, _ly: number, event: any) => {
@@ -69,11 +71,12 @@ export class HowToPlayScene extends Phaser.Scene {
     })
 
     // Botão VOLTAR
-    const back = this.add.text(60, 60, '← VOLTAR', {
+    const back = this.add.text(60, 60, '< VOLTAR', {
       fontSize: '28px', color: '#ffffff',
       fontFamily: '"Press Start 2P", monospace',
       stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2).setInteractive({ useHandCursor: true })
+    }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(2)
+    padInteractive(back)
     back.on('pointerdown',  (_p: any, _lx: number, _ly: number, event: any) => {
       event.stopPropagation()
       this.goBack()
