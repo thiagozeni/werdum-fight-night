@@ -60,35 +60,48 @@ As correções foram feitas no código-fonte web compartilhado (não em arquivos
 
 | Campo | Valor |
 |---|---|
-| **Status** | Ainda não publicado |
-| **versionCode** | 1 |
-| **versionName** | 1.0 |
-| **Keystore** | Configurada (`android/app/keystore/3contra.keystore`, alias `3contra-todos`) |
-| **google-services.json** | Ausente (notificações push não funcionarão sem ele) |
+| **Developer ID** | 8460845167994162330 |
+| **App ID** | 4972966731731974685 |
+| **Status** | 1.0.1 — Teste fechado (Alpha) em análise pelo Google |
+| **Versão anterior em análise** | 1.0 (versionCode 1) — cancelada e substituída pela 1.0.1 |
+| **Versão atual em análise** | 1.0.1 (versionCode 2) |
+| **versionCode** | 2 |
+| **versionName** | 1.0.1 |
+| **Faixa de teste** | Teste fechado - Alpha |
+| **Países/regiões** | 172 |
+| **Testadores** | Lista de e-mails (Cachorradas Estúdios) |
+| **Keystore** | `android/app/keystore/3contra.keystore` (alias `3contra-todos`) |
+| **Assinatura** | Google Play App Signing ativado (proteção automática) |
 | **Orientação** | Landscape + Modo imersivo |
+| **Data do envio para revisão** | 2026-04-10 |
 
-### Preparação para publicação Android
+### Histórico de versões Android
 
-- Build de release com signing está configurado no Gradle.
-- Assets para a loja já existem em `/store-assets/`:
-  - `play-store-icon.png`
-  - `feature-graphic.png`
-  - `app-store-icon.png`
-- Não há evidência de submissão ao Google Play Console até o momento.
+- **1.0 (versionCode 1)** — Build inicial enviada em 08/04/2026 para Teste interno e 09/04/2026 para Teste fechado (Alpha). Continha os mesmos bugs encontrados no iOS.
+- **1.0.1 (versionCode 2)** — Build corrigida com as mesmas 5 correções do iOS. Gerada em 10/04/2026 após `npx cap sync android` + `./gradlew bundleRelease`. Enviada para Teste fechado (Alpha) em 10/04/2026, substituindo a análise da 1.0.
+
+### Build Android 1.0.1
+
+- Web build: `npm run build` (mesmo código-fonte que iOS)
+- Sincronização: `npx cap sync android` (copia assets web para `android/app/src/main/assets/public/`)
+- AAB gerado: `./gradlew bundleRelease` com JAVA_HOME apontando para JDK 21 do Android Studio
+- Arquivo: `android/app/build/outputs/bundle/release/app-release.aab` (133 MB)
+- Aviso na revisão: ausência de arquivo de desofuscação R8/ProGuard (informativo, não bloqueante)
 
 ### Próximos passos para Google Play
 
-1. Adicionar `google-services.json` se quiser notificações push.
-2. Gerar o AAB de release (`./gradlew bundleRelease`).
-3. Criar a listagem no Google Play Console (descrição, screenshots, classificação etária).
-4. Fazer upload do AAB e submeter para revisão.
+1. Aguardar aprovação da análise do Teste fechado (Alpha) pela equipe do Google.
+2. Após aprovação, testar com os testadores Alpha.
+3. Promover para Teste aberto ou Produção quando pronto.
+4. Acesso de produção ainda não liberado — solicitar quando a versão estiver validada.
 
 ---
 
 ## Links úteis
 
 - App Store Connect: `https://appstoreconnect.apple.com/apps/6761487568`
-- Política de privacidade: rota `/privacy` no app web
+- Google Play Console: `https://play.google.com/console/u/0/developers/8460845167994162330/app/4972966731731974685`
+- Política de privacidade: `https://werdumfight.com/privacy`
 
 ---
 
