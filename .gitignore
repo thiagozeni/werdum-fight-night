@@ -4,3 +4,23 @@ dist/
 **/dont-use/
 /videos/
 _excluded/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Scratch de extração de frames via ffmpeg (não é asset do app)
+public/videos/loader-frames/
+
+# Backups pesados em _artes-originais/ — ficam só local, nunca no git
+_artes-originais/Prints/
+_artes-originais/Screenshots App Store/
+_artes-originais/Telas Game/
+_artes-originais/audio-old/
+_artes-originais/cenario-old/
+_artes-originais/imgs_game_werdum/
+_artes-originais/music-old/
+_artes-originais/personagens-old/
+_artes-originais/sfx-unused/
+_artes-originais/sprites-source/
+_artes-originais/sprites-werdum-old/
