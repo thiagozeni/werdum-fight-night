@@ -13,24 +13,45 @@ export class TitleScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale
     this.navigating = false
-    sound.startIntroMusic()
 
-    // Vídeo de fundo em loop
-    this.bgVideo = this.add.video(width / 2, height / 2, 'intro-video')
-    this.bgVideo.setDepth(0)
-    prepareIOSVideo(this.bgVideo)
-    this.bgVideo.play(true)
+    // Garante câmera visível — protege contra estado residual de transição de cena
+    this.cameras.main.setAlpha(1)
 
-    // Ajusta escala mantendo proporção — cobre a tela sem distorcer
-    const applyScale = () => {
-      const vid = this.bgVideo!.video
-      if (vid?.videoWidth) {
-        const scale = Math.max(width / vid.videoWidth, height / vid.videoHeight)
-        this.bgVideo!.setScale(scale)
+    try { sound.startIntroMusic() } catch { /* noop — AudioContext pode estar suspenso */ }
+
+    // Fundo preto garantido — base visível mesmo sem vídeo
+    this.add.rectangle(width / 2, height / 2, width, height, 0x111111).setDepth(-1)
+
+    // Detecta Mac rodando app iOS em modo de compatibilidade:
+    // Capacitor.isNativePlatform() = true, mas sem touchscreen (maxTouchPoints = 0).
+    // Nesses casos o vídeo não reproduz corretamente e causa tela preta.
+    const cap = (window as any).Capacitor
+    const isNative = cap?.isNativePlatform?.() === true
+    const isMacCompat = isNative && navigator.maxTouchPoints === 0
+
+    if (!isMacCompat) {
+      try {
+        // Vídeo de fundo em loop
+        this.bgVideo = this.add.video(width / 2, height / 2, 'intro-video')
+        this.bgVideo.setDepth(0)
+        prepareIOSVideo(this.bgVideo)
+        this.bgVideo.play(true)
+
+        // Ajusta escala mantendo proporção — cobre a tela sem distorcer
+        const applyScale = () => {
+          const vid = this.bgVideo!.video
+          if (vid?.videoWidth) {
+            const scale = Math.max(width / vid.videoWidth, height / vid.videoHeight)
+            this.bgVideo!.setScale(scale)
+          }
+        }
+        this.bgVideo.on('created', applyScale)
+        applyScale()
+      } catch {
+        this.bgVideo = null
+        // Vídeo falhou — fundo preto já garantido pelo rectangle acima
       }
     }
-    this.bgVideo.on('created', applyScale)
-    applyScale()
 
     // Logo "3 Contra Todos" — frente de todos os elementos
     this.add.image(0, 0, 'logo-novo')
