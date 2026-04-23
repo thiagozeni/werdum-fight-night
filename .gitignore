@@ -24,3 +24,10 @@ _artes-originais/personagens-old/
 _artes-originais/sfx-unused/
 _artes-originais/sprites-source/
 _artes-originais/sprites-werdum-old/
+
+# Segurança — chaves, credenciais e secrets
+.env
+.env.local
+.env.*.local
+service_account.json
+*.pem
