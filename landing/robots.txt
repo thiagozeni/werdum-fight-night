@@ -1,5 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /demo/
-
-Sitemap: https://werdumfight.com/sitemap.xml
+Disallow: /
