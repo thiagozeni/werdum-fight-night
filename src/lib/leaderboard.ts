@@ -11,7 +11,13 @@ export interface ScoreEntry {
 }
 
 export async function saveScore(entry: ScoreEntry): Promise<void> {
-  const { error } = await supabase.from('scores').insert(entry)
+  const { error } = await supabase.rpc('submit_score', {
+    p_player_name: entry.player_name,
+    p_character:   entry.character,
+    p_continues:   entry.continues,
+    p_time_ms:     entry.time_ms,
+    p_score:       entry.score,
+  })
   if (error) throw new Error(error.message)
 }
 
