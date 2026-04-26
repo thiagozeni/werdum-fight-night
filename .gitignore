@@ -31,3 +31,12 @@ _artes-originais/sprites-werdum-old/
 .env.*.local
 service_account.json
 *.pem
+
+# Android signing — NUNCA commitar keystores ou senhas
+android/app/keystore/
+android/keystore/
+*.keystore
+*.jks
+android/gradle.properties
+android/local.properties
+keystore.properties
